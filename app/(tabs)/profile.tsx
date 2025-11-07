@@ -1,4 +1,3 @@
-// app/(tabs)/profile.tsx
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
@@ -43,7 +42,6 @@ export default function ProfileScreen() {
 
   const palette = useMemo(() => Colors[current], [current]);
 
-  // ---------- ensure user doc exists ----------
   async function ensureUserDoc(uid: string) {
     const r = doc(db, "users", uid);
     const s = await getDoc(r);
@@ -70,7 +68,6 @@ export default function ProfileScreen() {
     }
   }
 
-  // ---------- load profile ----------
   useEffect(() => {
     (async () => {
       if (!user) return;
@@ -91,7 +88,6 @@ export default function ProfileScreen() {
     })();
   }, [user]);
 
-  // ---------- pick & upload avatar ----------
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -111,7 +107,7 @@ export default function ProfileScreen() {
           doc(db, "users", user.uid),
           { photoURL: downloadURL, updatedAt: serverTimestamp() },
           { merge: true }
-        ); // <= merge: true устраняет "No document to update"
+        );
         setImage(downloadURL);
       } catch (e: any) {
         console.error(e);
@@ -120,19 +116,16 @@ export default function ProfileScreen() {
     }
   };
 
-  // ---------- save unique @username ----------
   const saveUsername = async () => {
     if (!user) return;
     const raw = username.trim();
     if (!raw) return;
 
-    // Нормализуем: должен начинаться с @
     const normalized = raw.startsWith("@") ? raw : `@${raw}`;
     const lower = normalized.toLowerCase();
 
     try {
       setSavingUsername(true);
-      // Проверяем уникальность
       const q = query(
         collection(db, "users"),
         where("username_lower", "==", lower)
@@ -142,7 +135,6 @@ export default function ProfileScreen() {
 
       if (takenByOther) {
         Alert.alert("Username taken", "This username is already in use.");
-        // Вернём старое значение из БД
         const cur = await getDoc(doc(db, "users", user.uid));
         const old = (cur.exists() && (cur.data() as any).username) || username;
         setUsername(old);
@@ -167,13 +159,12 @@ export default function ProfileScreen() {
     }
   };
 
-  // ---------- sign out ----------
   const handleSignOut = async () => {
     await auth.signOut();
     router.replace("/");
   };
 
-  // demo lists
+  // dummy data
   const myRecipes = [
     { id: "1", title: "Spaghetti Carbonara" },
     { id: "2", title: "Pancakes" },
@@ -194,7 +185,6 @@ export default function ProfileScreen() {
 
   return (
     <ThemedView style={[styles.container]}>
-      {/* Card header */}
       <View
         style={[
           styles.headerCard,
@@ -242,7 +232,6 @@ export default function ProfileScreen() {
           ) : null}
         </View>
 
-        {/* Theme button */}
         <TouchableOpacity
           style={[
             styles.themeButton,
@@ -259,7 +248,6 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Lists */}
       <View style={styles.section}>
         <ThemedText type="subtitle" style={styles.sectionTitle}>
           Your Recipes
@@ -312,7 +300,6 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      {/* Sign out */}
       <TouchableOpacity
         onPress={handleSignOut}
         style={[
@@ -323,7 +310,6 @@ export default function ProfileScreen() {
         <Text style={styles.signOutText}>Sign Out</Text>
       </TouchableOpacity>
 
-      {/* Theme modal */}
       <Modal visible={themeModal} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View

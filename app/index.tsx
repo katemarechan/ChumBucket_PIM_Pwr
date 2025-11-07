@@ -46,7 +46,6 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
 
-  // === Animation setup ===
   const opacity = useSharedValue(0);
   const scale = useSharedValue(0.92);
 
@@ -134,7 +133,6 @@ export default function LoginScreen() {
           Your recipe collection
         </Text>
 
-        {/* === Animated frosted glass card === */}
         <Animated.View style={[styles.overlay, animatedStyle]}>
           <View
             style={[
