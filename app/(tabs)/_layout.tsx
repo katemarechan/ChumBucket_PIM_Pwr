@@ -45,7 +45,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="home"
+        name="homefeed"
         options={{
           tabBarIcon: ({ focused }) => (
             <Entypo
