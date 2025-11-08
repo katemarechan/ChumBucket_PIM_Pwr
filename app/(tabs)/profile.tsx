@@ -164,7 +164,6 @@ export default function ProfileScreen() {
     router.replace("/");
   };
 
-  // dummy data
   const myRecipes = [
     { id: "1", title: "Spaghetti Carbonara" },
     { id: "2", title: "Pancakes" },
