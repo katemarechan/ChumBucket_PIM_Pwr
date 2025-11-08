@@ -1,3 +1,5 @@
+// app/(tabs)/homefeed.tsx
+import { useRecipes } from "@/context/RecipesContext";
 import { Link } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
@@ -16,44 +18,23 @@ import {
   searchStyles,
 } from "../../styles/styles";
 
-const image1 = require("../../assets/carbonara.png");
-const image2 = require("../../assets/pumpkin.png");
-const image3 = require("../../assets/wonton.png");
+const getImageSource = (img: number | string) =>
+  typeof img === "string" ? { uri: img } : img;
 
-interface Recipe {
-  id: string;
-  title: string;
-  image: any;
-  isSaved: boolean;
-}
+const getImageUri = (img: number | string) =>
+  typeof img === "string" ? img : Image.resolveAssetSource(img).uri;
 
 const HomeFeedScreen: React.FC = () => {
   const isDark = useColorScheme() === "dark";
   const theme = isDark ? colors.dark : colors.light;
 
-  const [recipes, setRecipes] = useState<Recipe[]>([
-    {
-      id: "1",
-      title: "Marry Me Chicken Pot Pie",
-      image: image1,
-      isSaved: false,
-    },
-    { id: "2", title: "One Pot Wonton Soup", image: image2, isSaved: false },
-    { id: "3", title: "Creamy Pasta Carbonara", image: image3, isSaved: false },
-  ]);
+  const { recipes, toggleSave } = useRecipes();
 
   const [query, setQuery] = useState("");
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return q
-      ? recipes.filter((r) => r.title.toLowerCase().includes(q))
-      : recipes;
+    return q ? recipes.filter((r) => r.title.toLowerCase().includes(q)) : recipes;
   }, [recipes, query]);
-
-  const toggleSave = (id: string) =>
-    setRecipes((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, isSaved: !r.isSaved } : r))
-    );
 
   return (
     <View
@@ -83,7 +64,10 @@ const HomeFeedScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
       >
         {filtered.map((recipe) => {
-          const imageUri = Image.resolveAssetSource(recipe.image).uri;
+          const imgSrc = getImageSource(recipe.image);
+          const imageUri = getImageUri(recipe.image);
+          
+          console.log("SUDDAAAA" + recipe.description)
 
           return (
             <Link
@@ -94,7 +78,11 @@ const HomeFeedScreen: React.FC = () => {
                   id: recipe.id,
                   title: recipe.title,
                   imageUri,
-                  totalTime: "35 mins",
+                  description: recipe.description ?? "",
+                  ingredients: JSON.stringify(recipe.ingredients ?? []),
+                  instructions: recipe.instructions ?? "",
+                  isSaved: String(recipe.isSaved),
+                  totalTime: "45 mins",
                   author: "Joe Goldberg",
                 },
               }}
@@ -110,15 +98,9 @@ const HomeFeedScreen: React.FC = () => {
                 ]}
                 activeOpacity={0.9}
               >
-                <Image
-                  source={recipe.image}
-                  style={recipeStyles.recipeImage}
-                  resizeMode="cover"
-                />
+                <Image source={imgSrc} style={recipeStyles.recipeImage} resizeMode="cover" />
                 <View style={recipeStyles.recipeInfo}>
-                  <Text
-                    style={[recipeStyles.recipeTitle, { color: theme.text }]}
-                  >
+                  <Text style={[recipeStyles.recipeTitle, { color: theme.text }]}>
                     {recipe.title}
                   </Text>
                   <TouchableOpacity

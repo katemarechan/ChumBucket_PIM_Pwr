@@ -1,3 +1,4 @@
+// app/recipe/[id].tsx
 import { useLocalSearchParams } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
@@ -15,74 +16,51 @@ import {
   recipeStyles,
 } from "../../styles/styles";
 
-interface Ingredient {
-  id: string;
-  text: string;
-}
-interface Instruction {
-  id: string;
-  step: number;
-  text: string;
-}
-interface RecipeData {
-  id: string;
-  title: string;
-  imageUrl: string;
-  author: string;
-  authorAvatar: string;
-  totalTime: string;
-  isSaved: boolean;
-  ingredients: Ingredient[];
-  instructions: Instruction[];
-  hashtags: string[];
-}
-
-const DEFAULT_INGREDIENTS: Ingredient[] = [
-  { id: "1", text: "½ pound bacon, cut into small pieces" },
-  { id: "2", text: "4 large eggs, at room temperature" },
-  { id: "3", text: "¼ cup heavy cream, at room temperature" },
-  { id: "4", text: "1 cup grated Parmesan cheese" },
-];
-
-const DEFAULT_INSTRUCTIONS: Instruction[] = [
-  { id: "1", step: 1, text: "Cook bacon until crisp; drain." },
-  { id: "2", step: 2, text: "Beat eggs and cream, add Parmesan." },
-  { id: "3", step: 3, text: "Boil pasta to al dente; drain." },
-  { id: "4", step: 4, text: "Combine all; season and serve." },
-];
+type RouteParams = {
+  id?: string;
+  title?: string;
+  imageUri?: string;
+  description?: string;
+  ingredients?: string;    
+  instructions?: string;   
+  isSaved?: string;        
+  totalTime?: string;
+  author?: string;
+};
 
 const RecipeDetailScreen: React.FC = () => {
-  const params = useLocalSearchParams<{
-    id?: string;
-    title?: string;
-    imageUri?: string;
-    totalTime?: string;
-    author?: string;
-  }>();
+  const params = useLocalSearchParams<RouteParams>();
 
-  const initial: RecipeData = useMemo(
-    () => ({
-      id: params.id ?? "0",
-      title: params.title ?? "Recipe",
-      imageUrl: params.imageUri ?? "",
-      author: params.author ?? "Unknown",
-      authorAvatar: "👤",
-      totalTime: params.totalTime ?? "—",
-      isSaved: false,
-      ingredients: DEFAULT_INGREDIENTS,
-      instructions: DEFAULT_INSTRUCTIONS,
-      hashtags: ["#italian", "#pasta", "#dinner", "#comfort-food"],
-    }),
-    [params]
-  );
+  const parsedIngredients: string[] = useMemo(() => {
+    try {
+      const val = params.ingredients ?? "[]";
+      const arr = JSON.parse(val as string);
+      return Array.isArray(arr) ? arr.map(String) : [];
+    } catch {
+      return [];
+    }
+  }, [params.ingredients]);
+
+  const parsedSteps: string[] = useMemo(() => {
+    const raw = (params.instructions ?? "").toString();
+    return raw
+      .split(/\r?\n+/)
+      .map(s => s.trim())
+      .filter(Boolean);
+  }, [params.instructions]);
+
+  const initialIsSaved = (params.isSaved ?? "false") === "true";
 
   const isDark = useColorScheme() === "dark";
   const theme = isDark ? colors.dark : colors.light;
 
-  const [recipe, setRecipe] = useState<RecipeData>(initial);
+  const [isSaved, setIsSaved] = useState<boolean>(initialIsSaved);
 
-  const toggleSave = () =>
-    setRecipe((prev) => ({ ...prev, isSaved: !prev.isSaved }));
+  const imageUri = params.imageUri ?? "";
+  const title = params.title ?? "Recipe";
+  const description = params.description ?? "";
+  const totalTime = params.totalTime ?? "—";
+  const author = params.author ?? "Unknown";
 
   return (
     <View
@@ -99,31 +77,34 @@ const RecipeDetailScreen: React.FC = () => {
               { backgroundColor: theme.primaryDark },
             ]}
           >
-            <Text style={{ fontSize: 24 }}>{recipe.authorAvatar}</Text>
+            <Text style={{ fontSize: 24 }}>👤</Text>
           </View>
           <Text style={[recipeDetailStyles.userName, { color: theme.text }]}>
-            {recipe.author}
+            {author}
           </Text>
         </View>
 
         <View style={recipeStyles.recipeHero}>
-          <Image
-            source={{ uri: recipe.imageUrl }}
-            style={recipeStyles.recipeHeroImg}
-            resizeMode="cover"
-          />
+          {!!imageUri && (
+            <Image
+              source={{ uri: imageUri }}
+              style={recipeStyles.recipeHeroImg}
+              resizeMode="cover"
+            />
+          )}
           <TouchableOpacity
             style={[
               recipeStyles.saveBtn,
-              recipe.isSaved && {
+              isSaved && {
                 backgroundColor: theme.primary,
                 borderColor: theme.primary,
               },
             ]}
-            onPress={toggleSave}
+            onPress={() => setIsSaved(s => !s)}
+            activeOpacity={0.9}
           >
             <Text style={recipeStyles.saveBtnText}>
-              {recipe.isSaved ? "❤️" : "🤍"}
+              {isSaved ? "❤️" : "🤍"}
             </Text>
           </TouchableOpacity>
         </View>
@@ -132,11 +113,22 @@ const RecipeDetailScreen: React.FC = () => {
           <Text
             style={[
               commonStyles.title,
-              { color: theme.text, marginBottom: 15 },
+              { color: theme.text, marginBottom: 8 },
             ]}
           >
-            {recipe.title}
+            {title}
           </Text>
+
+          {description ? (
+            <Text
+              style={[
+                recipeDetailStyles.originalRecipe,
+                { color: theme.textSecondary, marginBottom: 12 },
+              ]}
+            >
+              {description}
+            </Text>
+          ) : null}
 
           <View style={recipeDetailStyles.timeInfo}>
             <Text style={{ fontSize: 16 }}>⏱️</Text>
@@ -147,7 +139,7 @@ const RecipeDetailScreen: React.FC = () => {
               ]}
             >
               <Text style={recipeDetailStyles.timeInfoBold}>Total Time:</Text>{" "}
-              {recipe.totalTime}
+              {totalTime}
             </Text>
           </View>
 
@@ -156,41 +148,39 @@ const RecipeDetailScreen: React.FC = () => {
           >
             Ingredients
           </Text>
-          <Text
-            style={[
-              recipeDetailStyles.originalRecipe,
-              { color: theme.primary },
-            ]}
-          >
-            Original recipe
-          </Text>
           <View style={recipeDetailStyles.ingredientList}>
-            {recipe.ingredients.map((i) => (
-              <View
-                key={i.id}
-                style={[
-                  recipeDetailStyles.ingredientItem,
-                  { borderBottomColor: theme.divider },
-                ]}
-              >
-                <Text
+            {parsedIngredients.length === 0 ? (
+              <Text style={{ color: theme.textSecondary }}>
+                No ingredients provided.
+              </Text>
+            ) : (
+              parsedIngredients.map((line, idx) => (
+                <View
+                  key={`${idx}-${line}`}
                   style={[
-                    recipeDetailStyles.ingredientBullet,
-                    { color: theme.primary },
+                    recipeDetailStyles.ingredientItem,
+                    { borderBottomColor: theme.divider },
                   ]}
                 >
-                  •
-                </Text>
-                <Text
-                  style={[
-                    recipeDetailStyles.ingredientText,
-                    { color: theme.text },
-                  ]}
-                >
-                  {i.text}
-                </Text>
-              </View>
-            ))}
+                  <Text
+                    style={[
+                      recipeDetailStyles.ingredientBullet,
+                      { color: theme.primary },
+                    ]}
+                  >
+                    •
+                  </Text>
+                  <Text
+                    style={[
+                      recipeDetailStyles.ingredientText,
+                      { color: theme.text },
+                    ]}
+                  >
+                    {line}
+                  </Text>
+                </View>
+              ))
+            )}
           </View>
 
           <Text
@@ -199,61 +189,43 @@ const RecipeDetailScreen: React.FC = () => {
             Instructions
           </Text>
           <View>
-            {recipe.instructions.map((s) => (
-              <View
-                key={s.id}
-                style={[
-                  recipeDetailStyles.instructionItem,
-                  {
-                    backgroundColor: theme.cardBg,
-                    borderColor: theme.cardBorder,
-                  },
-                ]}
-              >
-                <Text
+            {parsedSteps.length === 0 ? (
+              <Text style={{ color: theme.textSecondary }}>
+                No instructions provided.
+              </Text>
+            ) : (
+              parsedSteps.map((t, i) => (
+                <View
+                  key={`${i}-${t}`}
                   style={[
-                    recipeDetailStyles.instructionText,
-                    { color: theme.text },
+                    recipeDetailStyles.instructionItem,
+                    {
+                      backgroundColor: theme.cardBg,
+                      borderColor: theme.cardBorder,
+                    },
                   ]}
                 >
                   <Text
                     style={[
-                      recipeDetailStyles.stepNumber,
-                      { color: theme.primary },
+                      recipeDetailStyles.instructionText,
+                      { color: theme.text },
                     ]}
                   >
-                    {s.step}.
-                  </Text>{" "}
-                  {s.text}
-                </Text>
-              </View>
-            ))}
+                    <Text
+                      style={[
+                        recipeDetailStyles.stepNumber,
+                        { color: theme.primary },
+                      ]}
+                    >
+                      {i + 1}.
+                    </Text>{" "}
+                    {t}
+                  </Text>
+                </View>
+              ))
+            )}
           </View>
 
-          <View style={recipeDetailStyles.hashtags}>
-            {recipe.hashtags.map((tag, idx) => (
-              <View
-                key={idx}
-                style={[
-                  recipeDetailStyles.hashtag,
-                  {
-                    backgroundColor: isDark
-                      ? "rgba(139,71,137,0.2)"
-                      : "rgba(143,188,143,0.2)",
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    recipeDetailStyles.hashtagText,
-                    { color: theme.text },
-                  ]}
-                >
-                  {tag}
-                </Text>
-              </View>
-            ))}
-          </View>
         </View>
       </ScrollView>
     </View>
