@@ -5,12 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5877facb-2ea5-424e-951b-13759ee7a4a4" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/(tabs)/_layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(tabs)/_layout.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/(tabs)/add.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(tabs)/add.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/(tabs)/home.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/(tabs)/homefeed.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(tabs)/homefeed.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/(tabs)/profile.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(tabs)/profile.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/constants/theme.ts" beforeDir="false" afterPath="$PROJECT_DIR$/constants/theme.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/styles/styles.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/styles/styles.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -32,19 +32,30 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
-    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
-    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;feature/ui-screens&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "git-widget-placeholder": "feature/ui-screens",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/missk/OneDrive/Documents/GitHub/ChumBucket_PIM_Pwr",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "ts.external.directory.path": "C:\\Users\\missk\\OneDrive\\Documents\\GitHub\\ChumBucket_PIM_Pwr\\node_modules\\typescript\\lib"
   }
-}</component>
+}]]></component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-deb605915726-JavaScript-WS-243.22562.222" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="5877facb-2ea5-424e-951b-13759ee7a4a4" name="Changes" comment="" />
@@ -52,7 +63,11 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1762533352919</updated>
+      <workItem from="1764426626887" duration="6388000" />
     </task>
     <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
   </component>
 </project>

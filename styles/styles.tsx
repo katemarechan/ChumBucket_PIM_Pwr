@@ -214,7 +214,7 @@ export const navigationStyles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 30,
-    paddingVertical: 12,
+    paddingVertical: 24,
     borderTopWidth: 1,
   },
   navBtn: {
@@ -236,9 +236,9 @@ export const navigationStyles = StyleSheet.create({
 export const recipeStyles = StyleSheet.create({
   recipeCard: {
     borderRadius: 20,
-    marginBottom: 15,
+    marginBottom: 20,
     overflow: "hidden",
-    borderWidth: 1,
+    borderWidth: 4,
   },
   recipeImage: {
     width: "100%",
