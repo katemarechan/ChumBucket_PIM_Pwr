@@ -29,6 +29,7 @@ export default function AddScreen() {
   const [ingredients, setIngredients] = useState<string[]>([]);
   const [description, setDescription] = useState("");
   const [instructions, setInstructions] = useState("");
+  const [totalTime, setTotalTime] = useState(""); 
 
   const addIngredient = () => {
     const val = ingredientInput.trim();
@@ -83,6 +84,7 @@ export default function AddScreen() {
       ingredients: [...ingredients],
       description: description.trim(),
       instructions: instructions.trim(),
+      totalTime: parseInt(totalTime) || 0,
     });
 
     setTitle("");
@@ -196,6 +198,24 @@ export default function AddScreen() {
               searchStyles.searchInput,
               { backgroundColor: theme.inputBg, color: theme.text },
             ]}
+          />
+        </View>
+
+        <View style={{ marginBottom: 14 }}>
+          <Text style={{ color: theme.textSecondary, marginBottom: 6 }}>
+            Total Time (minutes)
+          </Text>
+          <TextInput
+            value={totalTime}
+            onChangeText={setTotalTime}
+            placeholder="e.g. 45"
+            keyboardType="numeric"
+            placeholderTextColor={theme.textSecondary}
+            style={[
+              searchStyles.searchInput,
+              { backgroundColor: theme.inputBg, color: theme.text },
+            ]}
+            returnKeyType="next"
           />
         </View>
 

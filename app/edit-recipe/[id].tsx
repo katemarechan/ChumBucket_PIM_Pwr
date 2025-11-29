@@ -2,8 +2,7 @@ import { db } from "@/FirebaseConfig";
 import { useThemeManager } from "@/context/ThemeContext";
 import { colors, commonStyles, searchStyles } from "@/styles/styles";
 import * as ImagePicker from "expo-image-picker";
-import { router, useLocalSearchParams } from "expo-router";
-
+import { router, Stack, useLocalSearchParams } from "expo-router";
 import { doc, getDoc, serverTimestamp, updateDoc } from "firebase/firestore";
 
 import React, { useEffect, useMemo, useState } from "react";
@@ -33,6 +32,7 @@ export default function EditRecipeScreen() {
   const [ingredients, setIngredients] = useState<string[]>([]);
   const [description, setDescription] = useState("");
   const [instructions, setInstructions] = useState("");
+  const [totalTime, setTotalTime] = useState("");
 
   useEffect(() => {
     async function load() {
@@ -57,6 +57,9 @@ export default function EditRecipeScreen() {
         Array.isArray(data.instructions)
           ? data.instructions.join("\n")
           : data.instructions ?? ""
+      );
+      setTotalTime(
+        typeof data.totalTime === "number" ? String(data.totalTime) : ""
       );
 
       setLoading(false);
@@ -103,6 +106,11 @@ export default function EditRecipeScreen() {
   const onSave = async () => {
     if (!canSubmit) return;
 
+    const cleanTotal = totalTime.replace(",", ".").trim();
+    const parsed = Number(cleanTotal);
+    const totalTimeNumber =
+      cleanTotal.length > 0 && !Number.isNaN(parsed) ? parsed : 0;
+
     try {
       await updateDoc(doc(db, "recipes", id!), {
         title: title.trim(),
@@ -110,6 +118,7 @@ export default function EditRecipeScreen() {
         description: description.trim(),
         ingredients,
         instructions: instructions.trim(),
+        totalTime: totalTimeNumber,
         updatedAt: serverTimestamp(),
       });
 
@@ -135,208 +144,255 @@ export default function EditRecipeScreen() {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={[commonStyles.container, { backgroundColor: theme.background }]}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
-      <ScrollView
-        style={[commonStyles.scrollContainer]}
-        contentContainerStyle={[
-          commonStyles.contentContainer,
-          { paddingBottom: 120, paddingHorizontal: 20 },
-        ]}
+    <>
+      <Stack.Screen
+        options={{
+          headerShown: false,
+          headerBackVisible: false,
+        }}
+      />
+
+      <KeyboardAvoidingView
+        style={[commonStyles.container, { backgroundColor: theme.background }]}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <Text
-          style={{
-            fontSize: 28,
-            fontWeight: "700",
-            marginTop: 20,
-            marginBottom: 14,
-            color: theme.text,
-          }}
+        <ScrollView
+          style={[commonStyles.scrollContainer]}
+          contentContainerStyle={[
+            commonStyles.contentContainer,
+            { paddingBottom: 120, paddingHorizontal: 20 },
+          ]}
         >
-          Edit Recipe
-        </Text>
-
-        <View style={{ marginBottom: 14 }}>
-          <Text style={{ color: theme.textSecondary, marginBottom: 6 }}>
-            Title
-          </Text>
-          <TextInput
-            value={title}
-            onChangeText={setTitle}
-            placeholder="Title"
-            placeholderTextColor={theme.textSecondary}
-            style={[
-              searchStyles.searchInput,
-              { backgroundColor: theme.inputBg, color: theme.text },
-            ]}
-          />
-        </View>
-
-        <View style={{ marginBottom: 14 }}>
-          <Text style={{ color: theme.textSecondary, marginBottom: 6 }}>
-            Image URL or pick from device
-          </Text>
-
-          <View style={{ flexDirection: "row", gap: 8 }}>
-            <TextInput
-              value={imageUrl}
-              onChangeText={setImageUrl}
-              placeholder="https://example.com/photo.jpg"
-              placeholderTextColor={theme.textSecondary}
-              style={[
-                searchStyles.searchInput,
-                { backgroundColor: theme.inputBg, color: theme.text, flex: 1 },
-              ]}
-            />
-
-            <TouchableOpacity
-              onPress={pickFromDevice}
-              style={{
-                paddingHorizontal: 16,
-                borderRadius: 12,
-                justifyContent: "center",
-                alignItems: "center",
-                backgroundColor: theme.primary,
-              }}
-            >
-              <Text style={{ color: "#fff" }}>Pick</Text>
-            </TouchableOpacity>
-          </View>
-
-          {!!imageUrl && (
-            <Image
-              source={{ uri: imageUrl }}
-              style={{
-                width: "100%",
-                height: 180,
-                marginTop: 10,
-                borderRadius: 12,
-              }}
-              resizeMode="cover"
-            />
-          )}
-        </View>
-
-        <View style={{ marginBottom: 14 }}>
-          <Text style={{ color: theme.textSecondary, marginBottom: 6 }}>
-            Description
-          </Text>
-          <TextInput
-            value={description}
-            onChangeText={setDescription}
-            placeholder="Short description..."
-            placeholderTextColor={theme.textSecondary}
-            style={[
-              searchStyles.searchInput,
-              { backgroundColor: theme.inputBg, color: theme.text },
-            ]}
-          />
-        </View>
-
-        <View style={{ marginBottom: 14 }}>
-          <Text style={{ color: theme.textSecondary, marginBottom: 6 }}>
-            Ingredients
-          </Text>
-
-          <View style={{ flexDirection: "row", gap: 8 }}>
-            <TextInput
-              value={ingredientInput}
-              onChangeText={setIngredientInput}
-              placeholder="e.g. 200g pasta"
-              placeholderTextColor={theme.textSecondary}
-              style={[
-                searchStyles.searchInput,
-                { backgroundColor: theme.inputBg, color: theme.text, flex: 1 },
-              ]}
-              onSubmitEditing={addIngredient}
-            />
-
-            <TouchableOpacity
-              onPress={addIngredient}
-              style={{
-                paddingHorizontal: 16,
-                borderRadius: 12,
-                backgroundColor: theme.primary,
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              <Text style={{ color: "#fff" }}>Add</Text>
-            </TouchableOpacity>
-          </View>
 
           <View
             style={{
               flexDirection: "row",
-              flexWrap: "wrap",
-              gap: 8,
-              marginTop: 10,
+              alignItems: "center",
+              marginTop: 12
             }}
           >
-            {ingredients.map((ing, idx) => (
-              <TouchableOpacity
-                key={`${ing}-${idx}`}
-                onPress={() => removeIngredient(idx)}
-                style={{
-                  paddingHorizontal: 12,
-                  paddingVertical: 8,
-                  backgroundColor: theme.cardBg,
-                  borderColor: theme.cardBorder,
-                  borderWidth: 1,
-                  borderRadius: 999,
-                }}
-              >
-                <Text style={{ color: theme.text }}>{ing} ✕</Text>
-              </TouchableOpacity>
-            ))}
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={{ paddingVertical: 4, paddingRight: 8 }}
+              activeOpacity={0.7}
+            >
+              <Text style={{ color: theme.text, fontSize: 18 }}>← Back</Text>
+            </TouchableOpacity>
           </View>
-        </View>
 
-        <View style={{ marginBottom: 18 }}>
-          <Text style={{ color: theme.textSecondary, marginBottom: 6 }}>
-            Instructions
-          </Text>
-          <TextInput
-            value={instructions}
-            onChangeText={setInstructions}
-            placeholder="Step-by-step instructions..."
-            placeholderTextColor={theme.textSecondary}
-            multiline
-            style={[
-              searchStyles.searchInput,
-              {
-                backgroundColor: theme.inputBg,
-                color: theme.text,
-                minHeight: 140,
-                paddingTop: 12,
-              },
-            ]}
-          />
-        </View>
-
-        <TouchableOpacity
-          disabled={!canSubmit}
-          onPress={onSave}
-          style={{
-            backgroundColor: canSubmit ? theme.primary : theme.cardBorder,
-            paddingVertical: 14,
-            borderRadius: 14,
-            alignItems: "center",
-          }}
-        >
           <Text
             style={{
-              color: canSubmit ? "#fff" : theme.textSecondary,
-              fontSize: 16,
+              fontSize: 28,
               fontWeight: "700",
+              marginTop: 20,
+              marginBottom: 14,
+              color: theme.text,
             }}
           >
-            Save Changes
+            Edit Recipe
           </Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </KeyboardAvoidingView>
+
+          <View style={{ marginBottom: 14 }}>
+            <Text style={{ color: theme.textSecondary, marginBottom: 6 }}>
+              Title
+            </Text>
+            <TextInput
+              value={title}
+              onChangeText={setTitle}
+              placeholder="Title"
+              placeholderTextColor={theme.textSecondary}
+              style={[
+                searchStyles.searchInput,
+                { backgroundColor: theme.inputBg, color: theme.text },
+              ]}
+            />
+          </View>
+
+          <View style={{ marginBottom: 14 }}>
+            <Text style={{ color: theme.textSecondary, marginBottom: 6 }}>
+              Image URL or pick from device
+            </Text>
+
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              <TextInput
+                value={imageUrl}
+                onChangeText={setImageUrl}
+                placeholder="https://example.com/photo.jpg"
+                placeholderTextColor={theme.textSecondary}
+                style={[
+                  searchStyles.searchInput,
+                  { backgroundColor: theme.inputBg, color: theme.text, flex: 1 },
+                ]}
+              />
+
+              <TouchableOpacity
+                onPress={pickFromDevice}
+                style={{
+                  paddingHorizontal: 16,
+                  borderRadius: 12,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: theme.primary,
+                }}
+              >
+                <Text style={{ color: "#fff" }}>Pick</Text>
+              </TouchableOpacity>
+            </View>
+
+            {!!imageUrl && (
+              <Image
+                source={{ uri: imageUrl }}
+                style={{
+                  width: "100%",
+                  height: 180,
+                  marginTop: 10,
+                  borderRadius: 12,
+                }}
+                resizeMode="cover"
+              />
+            )}
+          </View>
+
+          <View style={{ marginBottom: 14 }}>
+            <Text style={{ color: theme.textSecondary, marginBottom: 6 }}>
+              Description
+            </Text>
+            <TextInput
+              value={description}
+              onChangeText={setDescription}
+              placeholder="Short description..."
+              placeholderTextColor={theme.textSecondary}
+              style={[
+                searchStyles.searchInput,
+                { backgroundColor: theme.inputBg, color: theme.text },
+              ]}
+            />
+          </View>
+
+          <View style={{ marginBottom: 14 }}>
+            <Text style={{ color: theme.textSecondary, marginBottom: 6 }}>
+              Total Time (minutes)
+            </Text>
+            <TextInput
+              value={totalTime}
+              onChangeText={setTotalTime}
+              placeholder="e.g. 45"
+              keyboardType="numeric"
+              placeholderTextColor={theme.textSecondary}
+              style={[
+                searchStyles.searchInput,
+                { backgroundColor: theme.inputBg, color: theme.text },
+              ]}
+            />
+          </View>
+
+          <View style={{ marginBottom: 14 }}>
+            <Text style={{ color: theme.textSecondary, marginBottom: 6 }}>
+              Ingredients
+            </Text>
+
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              <TextInput
+                value={ingredientInput}
+                onChangeText={setIngredientInput}
+                placeholder="e.g. 200g pasta"
+                placeholderTextColor={theme.textSecondary}
+                style={[
+                  searchStyles.searchInput,
+                  {
+                    backgroundColor: theme.inputBg,
+                    color: theme.text,
+                    flex: 1,
+                  },
+                ]}
+                onSubmitEditing={addIngredient}
+              />
+
+              <TouchableOpacity
+                onPress={addIngredient}
+                style={{
+                  paddingHorizontal: 16,
+                  borderRadius: 12,
+                  backgroundColor: theme.primary,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Text style={{ color: "#fff" }}>Add</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View
+              style={{
+                flexDirection: "row",
+                flexWrap: "wrap",
+                gap: 8,
+                marginTop: 10,
+              }}
+            >
+              {ingredients.map((ing, idx) => (
+                <TouchableOpacity
+                  key={`${ing}-${idx}`}
+                  onPress={() => removeIngredient(idx)}
+                  style={{
+                    paddingHorizontal: 12,
+                    paddingVertical: 8,
+                    backgroundColor: theme.cardBg,
+                    borderColor: theme.cardBorder,
+                    borderWidth: 1,
+                    borderRadius: 999,
+                  }}
+                >
+                  <Text style={{ color: theme.text }}>{ing} ✕</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          <View style={{ marginBottom: 18 }}>
+            <Text style={{ color: theme.textSecondary, marginBottom: 6 }}>
+              Instructions
+            </Text>
+            <TextInput
+              value={instructions}
+              onChangeText={setInstructions}
+              placeholder="Step-by-step instructions..."
+              placeholderTextColor={theme.textSecondary}
+              multiline
+              style={[
+                searchStyles.searchInput,
+                {
+                  backgroundColor: theme.inputBg,
+                  color: theme.text,
+                  minHeight: 140,
+                  paddingTop: 12,
+                },
+              ]}
+            />
+          </View>
+
+          <TouchableOpacity
+            disabled={!canSubmit}
+            onPress={onSave}
+            style={{
+              backgroundColor: canSubmit ? theme.primary : theme.cardBorder,
+              paddingVertical: 14,
+              borderRadius: 14,
+              alignItems: "center",
+            }}
+          >
+            <Text
+              style={{
+                color: canSubmit ? "#fff" : theme.textSecondary,
+                fontSize: 16,
+                fontWeight: "700",
+              }}
+            >
+              Save Changes
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </>
   );
 }

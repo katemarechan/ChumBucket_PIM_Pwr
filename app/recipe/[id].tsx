@@ -8,8 +8,6 @@ import {
   recipeStyles,
 } from "@/styles/styles";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useMemo, useState } from "react";
-import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import {
   arrayRemove,
   arrayUnion,
@@ -19,6 +17,8 @@ import {
   serverTimestamp,
   updateDoc,
 } from "firebase/firestore";
+import React, { useEffect, useMemo, useState } from "react";
+import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 const fallbackAvatar = require("@/assets/images/defaultAvatar.jpg");
 
@@ -214,7 +214,7 @@ const RecipeDetailScreen: React.FC = () => {
           <View
             style={{
               paddingHorizontal: 16,
-              paddingTop: 12,
+              paddingTop: 28,
               paddingBottom: 4,
               flexDirection: "row",
               alignItems: "center",
