@@ -83,7 +83,6 @@ export default function AddScreen() {
       ingredients: [...ingredients],
       description: description.trim(),
       instructions: instructions.trim(),
-      isSaved: false,
     });
 
     setTitle("");

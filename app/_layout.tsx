@@ -1,3 +1,4 @@
+import { RecipesProvider } from "@/context/RecipesContext";
 import { ThemeProvider, useThemeManager } from "@/context/ThemeContext";
 import {
   DarkTheme,
@@ -25,7 +26,9 @@ function LayoutInner() {
 export default function RootLayout() {
   return (
     <ThemeProvider>
-      <LayoutInner />
+      <RecipesProvider>
+        <LayoutInner />
+      </RecipesProvider>
     </ThemeProvider>
   );
 }

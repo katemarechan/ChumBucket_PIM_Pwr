@@ -1,4 +1,5 @@
 import { auth, db } from "@/FirebaseConfig";
+import { onAuthStateChanged } from "firebase/auth";
 import {
   collection,
   doc,
@@ -6,37 +7,42 @@ import {
   onSnapshot,
   QuerySnapshot,
   setDoc,
+  updateDoc,
 } from "firebase/firestore";
 import React, {
   createContext,
   ReactNode,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 
 export type Recipe = {
-  id: string;                
+  id: string;
   title: string;
-  image: string | number;         
+  image: string | number;
   description?: string;
   ingredients?: string[];
-  instructions?: string;       
+  instructions?: string;
   isSaved: boolean;
-  user_uid?: string | null;            
+  user_uid?: string | null;
 };
 
 type RecipesContextType = {
   recipes: Recipe[];
-  addRecipe: (recipe: Recipe) => Promise<void>;
+  addRecipe: (recipe: Omit<Recipe, "user_uid" | "isSaved">) => Promise<void>;
   toggleSave: (id: string) => void;
   loading: boolean;
 };
 
 const RecipesContext = createContext<RecipesContextType | undefined>(undefined);
 
+type RecipeBase = Omit<Recipe, "isSaved">;
+
 export const RecipesProvider = ({ children }: { children: ReactNode }) => {
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [recipesBase, setRecipesBase] = useState<RecipeBase[]>([]);
+  const [likedIds, setLikedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -45,13 +51,13 @@ export const RecipesProvider = ({ children }: { children: ReactNode }) => {
     const unsubscribe = onSnapshot(
       colRef,
       (snapshot: QuerySnapshot<DocumentData>) => {
-        const docs: Recipe[] = snapshot.docs.map((d) => {
+        const docs: RecipeBase[] = snapshot.docs.map((d) => {
           const data = d.data() as any;
 
           return {
             id: d.id,
             title: data.title ?? "",
-            image: data.image ?? "", 
+            image: data.image ?? "",
             description: data.description ?? "",
             ingredients: Array.isArray(data.ingredients)
               ? data.ingredients.map(String)
@@ -59,11 +65,11 @@ export const RecipesProvider = ({ children }: { children: ReactNode }) => {
             instructions: Array.isArray(data.instructions)
               ? data.instructions.map(String).join("\n")
               : data.instructions ?? "",
-            isSaved: false, 
+            user_uid: data.user_uid ?? null,
           };
         });
 
-        setRecipes(docs);
+        setRecipesBase(docs);
         setLoading(false);
       },
       (err) => {
@@ -75,20 +81,57 @@ export const RecipesProvider = ({ children }: { children: ReactNode }) => {
     return unsubscribe;
   }, []);
 
-  const addRecipe = async (recipe: Omit<Recipe, "user_uid">) => {
+  useEffect(() => {
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        setLikedIds([]);
+        return;
+      }
+
+      const userRef = doc(db, "users", user.uid);
+      const unsubscribeUser = onSnapshot(
+        userRef,
+        (snap) => {
+          const data = snap.data() as any | undefined;
+          const arr = Array.isArray(data?.likedRecipes)
+            ? data!.likedRecipes.map(String)
+            : [];
+          setLikedIds(arr);
+        },
+        (err) => {
+          console.error("Error listening user likedRecipes:", err);
+        }
+      );
+
+      return unsubscribeUser;
+    });
+
+    return unsubscribeAuth;
+  }, []);
+
+  const recipes: Recipe[] = useMemo(
+    () =>
+      recipesBase.map((r) => ({
+        ...r,
+        isSaved: likedIds.includes(r.id),
+      })),
+    [recipesBase, likedIds]
+  );
+
+  const addRecipe = async (recipe: Omit<Recipe, "user_uid" | "isSaved">) => {
     const user = auth.currentUser;
     const userUid = user?.uid ?? null;
 
-    const recipeWithUser: Recipe = {
+    const recipeWithUser: RecipeBase = {
       ...recipe,
       user_uid: userUid,
     };
 
-    setRecipes((prev) => [...prev, recipeWithUser]);
+    setRecipesBase((prev) => [...prev, recipeWithUser]);
 
     await setDoc(doc(db, "recipes", recipe.id), {
       uid: recipe.id,
-      user_uid: userUid, 
+      user_uid: userUid,
       title: recipe.title,
       image: recipe.image,
       description: recipe.description,
@@ -99,16 +142,19 @@ export const RecipesProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const toggleSave = (id: string) => {
-    setRecipes((prev) =>
-      prev.map((r) =>
-        r.id === id
-          ? {
-              ...r,
-              isSaved: !r.isSaved,
-            }
-          : r
-      )
-    );
+    const user = auth.currentUser;
+    if (!user) return;
+
+    setLikedIds((prev) => {
+      const already = prev.includes(id);
+      const next = already ? prev.filter((x) => x !== id) : [...prev, id];
+
+      updateDoc(doc(db, "users", user.uid), {
+        likedRecipes: next,
+      }).catch((e) => console.error("update likedRecipes failed", e));
+
+      return next;
+    });
   };
 
   return (
