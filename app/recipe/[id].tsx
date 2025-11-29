@@ -1,3 +1,5 @@
+// app/recipe/[id].tsx
+import { db } from "@/FirebaseConfig";
 import { useRecipes } from "@/context/RecipesContext";
 import { useThemeManager } from "@/context/ThemeContext";
 import {
@@ -6,192 +8,346 @@ import {
   recipeDetailStyles,
   recipeStyles,
 } from "@/styles/styles";
-import { useLocalSearchParams } from "expo-router";
-import React from "react";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { doc, onSnapshot } from "firebase/firestore";
+import React, { useEffect, useMemo, useState } from "react";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+
+const fallbackAvatar = require("@/assets/images/defaultAvatar.jpg");
+
+type RouteParams = {
+  id?: string;
+  title?: string;
+  imageUri?: string;
+  description?: string;
+  ingredients?: string;
+  instructions?: string;
+  totalTime?: string;
+  author?: string;
+};
+
+type UserProfile = {
+  name: string;
+  username?: string;
+  photoURL?: string | null;
+};
 
 const RecipeDetailScreen: React.FC = () => {
   const { current } = useThemeManager();
   const theme = colors[current];
 
+  const router = useRouter();
   const { recipes, toggleSave } = useRecipes();
-  const params = useLocalSearchParams<{ id: string }>();
+  const params = useLocalSearchParams<RouteParams>();
 
-  const recipeId = params.id?.toString() ?? "";
-  const recipe = recipes.find((r) => r.id === recipeId);
+  const recipeId = (params.id ?? "").toString();
+  const recipeFromContext = recipes.find((r) => r.id === recipeId);
 
-  if (!recipe) {
-    return (
-      <View
-        style={[
-          commonStyles.container,
-          { justifyContent: "center", alignItems: "center" },
-        ]}
-      >
-        <Text style={{ color: theme.text }}>Recipe not found</Text>
-      </View>
+  const [authorProfile, setAuthorProfile] = useState<UserProfile | null>(null);
+  const [avatarError, setAvatarError] = useState(false);
+
+  // Load author info from users/{user_uid}
+  useEffect(() => {
+    if (!recipeFromContext?.user_uid) {
+      setAuthorProfile(null);
+      return;
+    }
+
+    const userRef = doc(db, "users", recipeFromContext.user_uid);
+    const unsub = onSnapshot(
+      userRef,
+      (snap) => {
+        const data = snap.data() as any | undefined;
+        if (data) {
+          setAuthorProfile({
+            name: data.name ?? "Unknown",
+            username: data.username ?? undefined,
+            photoURL: data.photoURL ?? null,
+          });
+        } else {
+          setAuthorProfile(null);
+        }
+      },
+      (err) => {
+        console.error("Failed to load user profile", err);
+        setAuthorProfile(null);
+      }
     );
-  }
 
-  const parsedIngredients: string[] = recipe.ingredients ?? [];
+    return unsub;
+  }, [recipeFromContext?.user_uid]);
 
-  const parsedSteps: string[] = recipe.instructions
-    ? recipe.instructions
-        .split(/\r?\n/)
-        .map((s) => s.trim())
-        .filter(Boolean)
-    : [];
+  const parsedIngredients: string[] = useMemo(() => {
+    if (params.ingredients) {
+      try {
+        const arr = JSON.parse(params.ingredients as string);
+        return Array.isArray(arr) ? arr.map(String) : [];
+      } catch {
+        // ignore and fall back to context
+      }
+    }
+    return recipeFromContext?.ingredients ?? [];
+  }, [params.ingredients, recipeFromContext?.ingredients]);
+
+  const parsedSteps: string[] = useMemo(() => {
+    const raw =
+      (params.instructions as string | undefined)?.toString().trim() ||
+      recipeFromContext?.instructions ||
+      "";
+    return raw
+      .split(/\r?\n+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }, [params.instructions, recipeFromContext?.instructions]);
+
+  // Prefer Firestore image URL over route param
+  const imageFromContext =
+    typeof recipeFromContext?.image === "string"
+      ? recipeFromContext.image.trim()
+      : "";
+  const imageFromParams =
+    (params.imageUri as string | undefined)?.toString().trim() || "";
+
+  const imageUri = imageFromContext || imageFromParams;
+
+  const title =
+    (params.title as string | undefined) ||
+    recipeFromContext?.title ||
+    "Recipe";
+
+  const description =
+    (params.description as string | undefined) ||
+    recipeFromContext?.description ||
+    "";
+
+  const totalTime =
+    typeof recipeFromContext?.totalTime === "number"
+      ? `${recipeFromContext.totalTime} mins`
+      : (params.totalTime as string | undefined) || "—";
+
+  const isSaved = recipeFromContext?.isSaved ?? false;
+
+  const authorName =
+    authorProfile?.name || (params.author as string | undefined) || "Unknown";
+  const authorUsername = authorProfile?.username;
+
+  const avatarSrc =
+    !avatarError && authorProfile?.photoURL
+      ? { uri: authorProfile.photoURL }
+      : fallbackAvatar;
 
   return (
-    <View
-      style={[commonStyles.container, { backgroundColor: theme.background }]}
-    >
-      <ScrollView
-        style={commonStyles.scrollContainer}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}
+    <>
+      <Stack.Screen
+        options={{
+          headerShown: false,
+        }}
+      />
+
+      <View
+        style={[commonStyles.container, { backgroundColor: theme.background }]}
       >
-        <View style={recipeDetailStyles.userHeader}>
+        <ScrollView
+          style={commonStyles.scrollContainer}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Custom back button */}
           <View
-            style={[
-              commonStyles.avatarMedium,
-              { backgroundColor: theme.primary },
-            ]}
+            style={{
+              paddingHorizontal: 16,
+              paddingTop: 12,
+              paddingBottom: 4,
+              flexDirection: "row",
+              alignItems: "center",
+            }}
           >
-            <Text style={{ fontSize: 24 }}>👤</Text>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={{ paddingVertical: 4, paddingRight: 8 }}
+              activeOpacity={0.7}
+            >
+              <Text style={{ color: theme.text, fontSize: 18 }}>← Back</Text>
+            </TouchableOpacity>
           </View>
-          <Text style={[recipeDetailStyles.userName, { color: theme.text }]}>
-            Unknown
-          </Text>
-        </View>
 
-        <View style={recipeStyles.recipeHero}>
-          {!!recipe.image && (
+          {/* User header */}
+          <View style={recipeDetailStyles.userHeader}>
             <Image
-              source={{ uri: recipe.image.toString() }}
-              style={recipeStyles.recipeHeroImg}
-              resizeMode="cover"
+              source={avatarSrc}
+              style={commonStyles.avatarMedium}
+              onError={() => setAvatarError(true)}
             />
-          )}
-          <TouchableOpacity
-            style={[
-              recipeStyles.saveBtn,
-              recipe.isSaved && {
-                backgroundColor: theme.primary,
-                borderColor: theme.primary,
-              },
-            ]}
-            onPress={() => toggleSave(recipe.id)}
-            activeOpacity={0.9}
-          >
-            <Text style={recipeStyles.saveBtnText}>
-              {recipe.isSaved ? "❤️" : "🤍"}
-            </Text>
-          </TouchableOpacity>
-        </View>
 
-        <View style={[recipeDetailStyles.recipeContent]}>
-          <Text
-            style={[commonStyles.title, { color: theme.text, marginBottom: 8 }]}
-          >
-            {recipe.title}
-          </Text>
+            <View>
+              <Text
+                style={[recipeDetailStyles.userName, { color: theme.text }]}
+              >
+                {authorName}
+              </Text>
 
-          {recipe.description ? (
+              {authorUsername && (
+                <Text
+                  style={{
+                    color: theme.textSecondary,
+                    fontSize: 13,
+                    marginTop: 2,
+                  }}
+                >
+                  {authorUsername}
+                </Text>
+              )}
+            </View>
+          </View>
+
+          {/* Hero image + like button */}
+          <View style={recipeStyles.recipeHero}>
+            {!!imageUri && (
+              <Image
+                source={{ uri: imageUri }}
+                style={recipeStyles.recipeHeroImg}
+                resizeMode="cover"
+              />
+            )}
+            <TouchableOpacity
+              style={[
+                recipeStyles.saveBtn,
+                isSaved && {
+                  backgroundColor: theme.primary,
+                  borderColor: theme.primary,
+                },
+              ]}
+              onPress={() => {
+                if (recipeId) toggleSave(recipeId);
+              }}
+              activeOpacity={0.85}
+            >
+              <Text style={recipeStyles.saveBtnText}>
+                {isSaved ? "❤️" : "🤍"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Content */}
+          <View style={recipeDetailStyles.recipeContent}>
             <Text
               style={[
-                recipeDetailStyles.originalRecipe,
-                { color: theme.textSecondary, marginBottom: 12 },
+                commonStyles.title,
+                { color: theme.text, marginBottom: 8 },
               ]}
             >
-              {recipe.description}
+              {title}
             </Text>
-          ) : null}
 
-          <Text
-            style={[recipeDetailStyles.sectionTitle, { color: theme.text }]}
-          >
-            Ingredients
-          </Text>
-          <View style={recipeDetailStyles.ingredientList}>
-            {parsedIngredients.length === 0 ? (
-              <Text style={{ color: theme.textSecondary }}>
-                No ingredients provided.
-              </Text>
-            ) : (
-              parsedIngredients.map((line, idx) => (
-                <View
-                  key={`${idx}-${line}`}
-                  style={[
-                    recipeDetailStyles.ingredientItem,
-                    { borderBottomColor: theme.divider },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      recipeDetailStyles.ingredientBullet,
-                      { color: theme.primary },
-                    ]}
-                  >
-                    •
-                  </Text>
-                  <Text
-                    style={[
-                      recipeDetailStyles.ingredientText,
-                      { color: theme.text },
-                    ]}
-                  >
-                    {line}
-                  </Text>
-                </View>
-              ))
-            )}
-          </View>
-
-          <Text
-            style={[recipeDetailStyles.sectionTitle, { color: theme.text }]}
-          >
-            Instructions
-          </Text>
-
-          {parsedSteps.length === 0 ? (
-            <Text style={{ color: theme.textSecondary }}>
-              No instructions provided.
-            </Text>
-          ) : (
-            parsedSteps.map((t, i) => (
-              <View
-                key={`${i}-${t}`}
+            {description ? (
+              <Text
                 style={[
-                  recipeDetailStyles.instructionItem,
-                  {
-                    backgroundColor: theme.cardBg,
-                    borderColor: theme.cardBorder,
-                  },
+                  recipeDetailStyles.originalRecipe,
+                  { color: theme.textSecondary, marginBottom: 12 },
                 ]}
               >
-                <Text
-                  style={[
-                    recipeDetailStyles.instructionText,
-                    { color: theme.text },
-                  ]}
-                >
-                  <Text
+                {description}
+              </Text>
+            ) : null}
+
+            <View style={recipeDetailStyles.timeInfo}>
+              <Text style={{ fontSize: 16 }}>⏱️</Text>
+              <Text
+                style={[
+                  recipeDetailStyles.timeInfoText,
+                  { color: theme.textSecondary },
+                ]}
+              >
+                <Text style={recipeDetailStyles.timeInfoBold}>Total Time:</Text>{" "}
+                {totalTime}
+              </Text>
+            </View>
+
+            <Text
+              style={[recipeDetailStyles.sectionTitle, { color: theme.text }]}
+            >
+              Ingredients
+            </Text>
+            <View style={recipeDetailStyles.ingredientList}>
+              {parsedIngredients.length === 0 ? (
+                <Text style={{ color: theme.textSecondary }}>
+                  No ingredients provided.
+                </Text>
+              ) : (
+                parsedIngredients.map((line, idx) => (
+                  <View
+                    key={`${idx}-${line}`}
                     style={[
-                      recipeDetailStyles.stepNumber,
-                      { color: theme.primary },
+                      recipeDetailStyles.ingredientItem,
+                      { borderBottomColor: theme.divider },
                     ]}
                   >
-                    {i + 1}.
-                  </Text>{" "}
-                  {t}
+                    <Text
+                      style={[
+                        recipeDetailStyles.ingredientBullet,
+                        { color: theme.primary },
+                      ]}
+                    >
+                      •
+                    </Text>
+                    <Text
+                      style={[
+                        recipeDetailStyles.ingredientText,
+                        { color: theme.text },
+                      ]}
+                    >
+                      {line}
+                    </Text>
+                  </View>
+                ))
+              )}
+            </View>
+
+            <Text
+              style={[recipeDetailStyles.sectionTitle, { color: theme.text }]}
+            >
+              Instructions
+            </Text>
+            <View>
+              {parsedSteps.length === 0 ? (
+                <Text style={{ color: theme.textSecondary }}>
+                  No instructions provided.
                 </Text>
-              </View>
-            ))
-          )}
-        </View>
-      </ScrollView>
-    </View>
+              ) : (
+                parsedSteps.map((t, i) => (
+                  <View
+                    key={`${i}-${t}`}
+                    style={[
+                      recipeDetailStyles.instructionItem,
+                      {
+                        backgroundColor: theme.cardBg,
+                        borderColor: theme.cardBorder,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        recipeDetailStyles.instructionText,
+                        { color: theme.text },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          recipeDetailStyles.stepNumber,
+                          { color: theme.primary },
+                        ]}
+                      >
+                        {i + 1}.
+                      </Text>{" "}
+                      {t}
+                    </Text>
+                  </View>
+                ))
+              )}
+            </View>
+          </View>
+        </ScrollView>
+      </View>
+    </>
   );
 };
 

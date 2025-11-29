@@ -1,4 +1,4 @@
-import { auth, db } from "@/FirebaseConfig";
+import { auth, db, storage } from "@/FirebaseConfig";
 import { onAuthStateChanged } from "firebase/auth";
 import {
   collection,
@@ -9,6 +9,11 @@ import {
   setDoc,
   updateDoc,
 } from "firebase/firestore";
+import {
+  getDownloadURL,
+  ref,
+  uploadBytes,
+} from "firebase/storage";
 import React, {
   createContext,
   ReactNode,
@@ -21,10 +26,11 @@ import React, {
 export type Recipe = {
   id: string;
   title: string;
-  image: string | number;
+  image: string | number; 
   description?: string;
   ingredients?: string[];
   instructions?: string;
+  totalTime?: number;
   isSaved: boolean;
   user_uid?: string | null;
 };
@@ -65,6 +71,8 @@ export const RecipesProvider = ({ children }: { children: ReactNode }) => {
             instructions: Array.isArray(data.instructions)
               ? data.instructions.map(String).join("\n")
               : data.instructions ?? "",
+            totalTime:
+              typeof data.totalTime === "number" ? data.totalTime : 0,
             user_uid: data.user_uid ?? null,
           };
         });
@@ -122,9 +130,35 @@ export const RecipesProvider = ({ children }: { children: ReactNode }) => {
     const user = auth.currentUser;
     const userUid = user?.uid ?? null;
 
+    let imageUrl = "";
+    if (typeof recipe.image === "string" && recipe.image.trim().length > 0) {
+      const img = recipe.image.trim();
+
+      if (img.startsWith("http")) {
+        imageUrl = img;
+      } else {
+        try {
+          const response = await fetch(img);
+          const blob = await response.blob();
+
+          const imageRef = ref(storage, `recipes/${recipe.id}.jpg`);
+          await uploadBytes(imageRef, blob);
+          imageUrl = await getDownloadURL(imageRef);
+        } catch (err) {
+          console.error("Image upload failed, storing local path instead", err);
+          imageUrl = img;
+        }
+      }
+    }
+
+    const totalTime =
+      typeof recipe.totalTime === "number" ? recipe.totalTime : 0;
+
     const recipeWithUser: RecipeBase = {
       ...recipe,
+      image: imageUrl,
       user_uid: userUid,
+      totalTime,
     };
 
     setRecipesBase((prev) => [...prev, recipeWithUser]);
@@ -133,11 +167,14 @@ export const RecipesProvider = ({ children }: { children: ReactNode }) => {
       uid: recipe.id,
       user_uid: userUid,
       title: recipe.title,
-      image: recipe.image,
-      description: recipe.description,
-      ingredients: recipe.ingredients,
-      instructions: recipe.instructions,
-      totalTime: 0,
+      image: imageUrl,
+      description: recipe.description ?? "",
+      ingredients: recipe.ingredients ?? [],
+      instructions: (recipe.instructions ?? "")
+        .split(/\r?\n+/)
+        .map((s) => s.trim())
+        .filter(Boolean),
+      totalTime,
     });
   };
 

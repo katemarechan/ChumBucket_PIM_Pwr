@@ -164,7 +164,7 @@ export default function AddScreen() {
                 borderRadius: 12,
                 justifyContent: "center",
                 alignItems: "center",
-                backgroundColor: theme.primary,
+                backgroundColor: theme.primaryButton,
               }}
               activeOpacity={0.9}
             >
@@ -290,7 +290,7 @@ export default function AddScreen() {
           onPress={onSubmit}
           disabled={!canSubmit}
           style={{
-            backgroundColor: canSubmit ? theme.primary : theme.cardBorder,
+            backgroundColor: canSubmit ? theme.primaryButton : theme.cardBorder,
             paddingVertical: 14,
             borderRadius: 14,
             alignItems: "center",
