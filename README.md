@@ -61,6 +61,10 @@ Potential future enhancements include:
 - Multi-language support for international users
 - Social sharing integration with popular platforms
 
+---
+
+[Pictures, diagrams and screenshots]
+
 ### C4 Diagram:
 
 <p align="center">
@@ -170,6 +174,10 @@ Potencjalne przyszłe ulepszenia obejmują:
 - Samouczki wideo z przepisami i przewodniki kulinarne krok po kroku
 - Wsparcie wielojęzyczne dla użytkowników z całego świata
 - Integrację z popularnymi platformami społecznościowymi
+
+---
+
+[Zdjęcia, diagramy i zrzuty ekranu]
 
 ### Diagram C4:
 
