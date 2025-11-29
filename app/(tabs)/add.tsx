@@ -1,4 +1,6 @@
 import { useRecipes } from "@/context/RecipesContext";
+import { useThemeManager } from "@/context/ThemeContext";
+import { colors, commonStyles, searchStyles } from "@/styles/styles";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
@@ -14,14 +16,9 @@ import {
   View,
 } from "react-native";
 
-import { Colors } from "@/constants/theme";
-import { useThemeManager } from "@/context/ThemeContext";
-
-import { commonStyles, searchStyles } from "../../styles/styles";
-
 export default function AddScreen() {
   const { current } = useThemeManager();
-  const theme = Colors[current];
+  const theme = colors[current];
 
   const router = useRouter();
   const { addRecipe } = useRecipes();
@@ -189,7 +186,6 @@ export default function AddScreen() {
           )}
         </View>
 
-        {/* Description */}
         <View style={{ marginBottom: 14 }}>
           <Text style={{ color: theme.textSecondary, marginBottom: 6 }}>
             Description

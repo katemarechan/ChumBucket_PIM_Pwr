@@ -58,7 +58,7 @@ export default function ProfileScreen() {
           name: user?.displayName ?? "User",
           username: fallbackUsername,
           username_lower: fallbackUsername.toLowerCase(),
-          theme: "system",
+          theme: "light",
           photoURL: user?.photoURL ?? null,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
@@ -79,10 +79,17 @@ export default function ProfileScreen() {
       if (snap.exists()) {
         const data = snap.data() as any;
         setName(data.name || user.displayName || "User");
-        const fallback = user?.email ? `@${user.email.split("@")[0]}` : "@user";
+        const fallback =
+          user?.email && user.email.includes("@")
+            ? `@${user.email.split("@")[0]}`
+            : "@user";
         setUsername((data.username as string) || fallback);
         if (data.photoURL) setImage(data.photoURL);
-        if (data.theme) changeTheme(data.theme);
+
+        const storedTheme = data.theme as string | undefined;
+        if (storedTheme === "light" || storedTheme === "dark") {
+          changeTheme(storedTheme);
+        }
       }
       setLoading(false);
     })();
@@ -324,7 +331,7 @@ export default function ProfileScreen() {
               Choose Theme
             </ThemedText>
 
-            {(["light", "dark", "system"] as const).map((opt) => (
+            {(["light", "dark"] as const).map((opt) => (
               <TouchableOpacity
                 key={opt}
                 style={[
@@ -335,7 +342,7 @@ export default function ProfileScreen() {
                   },
                 ]}
                 onPress={async () => {
-                  changeTheme(opt);
+                  changeTheme(opt as "light" | "dark");
                   if (user) {
                     await setDoc(
                       doc(db, "users", user.uid),

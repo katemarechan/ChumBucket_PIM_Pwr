@@ -80,7 +80,8 @@ export default function LoginScreen() {
         name: defaults?.name ?? null,
         username: defaults?.username ?? fallbackUsername,
         username_lower: (defaults?.username ?? fallbackUsername).toLowerCase(),
-        theme: defaults?.theme ?? "system",
+        // default to light theme instead of "system"
+        theme: defaults?.theme ?? "light",
         photoURL: defaults?.photoURL ?? null,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -107,7 +108,7 @@ export default function LoginScreen() {
           await updateProfile(cred.user, { displayName: name.trim() });
         await ensureUserDoc(cred.user.uid, {
           name: name.trim() || null,
-          theme: "system",
+          theme: "light",
         });
       }
       router.replace("/(tabs)/homefeed");
@@ -116,6 +117,7 @@ export default function LoginScreen() {
       console.error(err);
     }
   };
+
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: palette.bg }]}>

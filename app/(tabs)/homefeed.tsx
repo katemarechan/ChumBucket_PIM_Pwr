@@ -69,8 +69,6 @@ const HomeFeedScreen: React.FC = () => {
           const imgSrc = getImageSource(recipe.image);
           const imageUri = getImageUri(recipe.image);
 
-          console.log("SUDDAAAA" + recipe.description);
-
           return (
             <Link
               key={recipe.id}
