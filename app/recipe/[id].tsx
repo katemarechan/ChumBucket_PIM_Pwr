@@ -7,66 +7,40 @@ import {
   recipeStyles,
 } from "@/styles/styles";
 import { useLocalSearchParams } from "expo-router";
-import React, { useMemo } from "react";
+import React from "react";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
-
-type RouteParams = {
-  id?: string;
-  title?: string;
-  imageUri?: string;
-  description?: string;
-  ingredients?: string;
-  instructions?: string;
-  totalTime?: string;
-  author?: string;
-};
 
 const RecipeDetailScreen: React.FC = () => {
   const { current } = useThemeManager();
   const theme = colors[current];
 
   const { recipes, toggleSave } = useRecipes();
-  const params = useLocalSearchParams<RouteParams>();
+  const params = useLocalSearchParams<{ id: string }>();
 
-  const recipeId = (params.id ?? "").toString();
-  const recipeFromContext = recipes.find((r) => r.id === recipeId);
+  const recipeId = params.id?.toString() ?? "";
+  const recipe = recipes.find((r) => r.id === recipeId);
 
-  const parsedIngredients: string[] = useMemo(() => {
-    try {
-      const val = params.ingredients ?? "[]";
-      const arr = JSON.parse(val as string);
-      return Array.isArray(arr) ? arr.map(String) : [];
-    } catch {
-      return [];
-    }
-  }, [params.ingredients]);
+  if (!recipe) {
+    return (
+      <View
+        style={[
+          commonStyles.container,
+          { justifyContent: "center", alignItems: "center" },
+        ]}
+      >
+        <Text style={{ color: theme.text }}>Recipe not found</Text>
+      </View>
+    );
+  }
 
-  const parsedSteps: string[] = useMemo(() => {
-    const raw = (params.instructions ?? "").toString();
-    return raw
-      .split(/\r?\n+/)
-      .map((s) => s.trim())
-      .filter(Boolean);
-  }, [params.instructions]);
+  const parsedIngredients: string[] = recipe.ingredients ?? [];
 
-  const imageUri =
-    (params.imageUri as string | undefined) ||
-    (typeof recipeFromContext?.image === "string"
-      ? (recipeFromContext.image as string)
-      : "");
-
-  const title =
-    (params.title as string | undefined) ||
-    recipeFromContext?.title ||
-    "Recipe";
-  const description =
-    (params.description as string | undefined) ||
-    recipeFromContext?.description ||
-    "";
-  const totalTime = (params.totalTime as string | undefined) || "—";
-  const author = (params.author as string | undefined) || "Unknown";
-
-  const isSaved = recipeFromContext?.isSaved ?? false;
+  const parsedSteps: string[] = recipe.instructions
+    ? recipe.instructions
+        .split(/\r?\n/)
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : [];
 
   return (
     <View
@@ -75,6 +49,7 @@ const RecipeDetailScreen: React.FC = () => {
       <ScrollView
         style={commonStyles.scrollContainer}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}
       >
         <View style={recipeDetailStyles.userHeader}>
           <View
@@ -86,14 +61,14 @@ const RecipeDetailScreen: React.FC = () => {
             <Text style={{ fontSize: 24 }}>👤</Text>
           </View>
           <Text style={[recipeDetailStyles.userName, { color: theme.text }]}>
-            {author}
+            Unknown
           </Text>
         </View>
 
         <View style={recipeStyles.recipeHero}>
-          {!!imageUri && (
+          {!!recipe.image && (
             <Image
-              source={{ uri: imageUri }}
+              source={{ uri: recipe.image.toString() }}
               style={recipeStyles.recipeHeroImg}
               resizeMode="cover"
             />
@@ -101,52 +76,37 @@ const RecipeDetailScreen: React.FC = () => {
           <TouchableOpacity
             style={[
               recipeStyles.saveBtn,
-              isSaved && {
+              recipe.isSaved && {
                 backgroundColor: theme.primary,
                 borderColor: theme.primary,
               },
             ]}
-            onPress={() => {
-              if (recipeId) toggleSave(recipeId);
-            }}
+            onPress={() => toggleSave(recipe.id)}
             activeOpacity={0.9}
           >
             <Text style={recipeStyles.saveBtnText}>
-              {isSaved ? "❤️" : "🤍"}
+              {recipe.isSaved ? "❤️" : "🤍"}
             </Text>
           </TouchableOpacity>
         </View>
 
-        <View style={recipeDetailStyles.recipeContent}>
+        <View style={[recipeDetailStyles.recipeContent]}>
           <Text
             style={[commonStyles.title, { color: theme.text, marginBottom: 8 }]}
           >
-            {title}
+            {recipe.title}
           </Text>
 
-          {description ? (
+          {recipe.description ? (
             <Text
               style={[
                 recipeDetailStyles.originalRecipe,
                 { color: theme.textSecondary, marginBottom: 12 },
               ]}
             >
-              {description}
+              {recipe.description}
             </Text>
           ) : null}
-
-          <View style={recipeDetailStyles.timeInfo}>
-            <Text style={{ fontSize: 16 }}>⏱️</Text>
-            <Text
-              style={[
-                recipeDetailStyles.timeInfoText,
-                { color: theme.textSecondary },
-              ]}
-            >
-              <Text style={recipeDetailStyles.timeInfoBold}>Total Time:</Text>{" "}
-              {totalTime}
-            </Text>
-          </View>
 
           <Text
             style={[recipeDetailStyles.sectionTitle, { color: theme.text }]}
@@ -193,43 +153,42 @@ const RecipeDetailScreen: React.FC = () => {
           >
             Instructions
           </Text>
-          <View>
-            {parsedSteps.length === 0 ? (
-              <Text style={{ color: theme.textSecondary }}>
-                No instructions provided.
-              </Text>
-            ) : (
-              parsedSteps.map((t, i) => (
-                <View
-                  key={`${i}-${t}`}
+
+          {parsedSteps.length === 0 ? (
+            <Text style={{ color: theme.textSecondary }}>
+              No instructions provided.
+            </Text>
+          ) : (
+            parsedSteps.map((t, i) => (
+              <View
+                key={`${i}-${t}`}
+                style={[
+                  recipeDetailStyles.instructionItem,
+                  {
+                    backgroundColor: theme.cardBg,
+                    borderColor: theme.cardBorder,
+                  },
+                ]}
+              >
+                <Text
                   style={[
-                    recipeDetailStyles.instructionItem,
-                    {
-                      backgroundColor: theme.cardBg,
-                      borderColor: theme.cardBorder,
-                    },
+                    recipeDetailStyles.instructionText,
+                    { color: theme.text },
                   ]}
                 >
                   <Text
                     style={[
-                      recipeDetailStyles.instructionText,
-                      { color: theme.text },
+                      recipeDetailStyles.stepNumber,
+                      { color: theme.primary },
                     ]}
                   >
-                    <Text
-                      style={[
-                        recipeDetailStyles.stepNumber,
-                        { color: theme.primary },
-                      ]}
-                    >
-                      {i + 1}.
-                    </Text>{" "}
-                    {t}
-                  </Text>
-                </View>
-              ))
-            )}
-          </View>
+                    {i + 1}.
+                  </Text>{" "}
+                  {t}
+                </Text>
+              </View>
+            ))
+          )}
         </View>
       </ScrollView>
     </View>

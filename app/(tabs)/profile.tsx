@@ -4,9 +4,14 @@ import { Colors } from "@/constants/theme";
 import { useThemeManager } from "@/context/ThemeContext";
 import { auth, db, storage } from "@/FirebaseConfig";
 import * as ImagePicker from "expo-image-picker";
-import { Link, router, useFocusEffect } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
+
+import Entypo from "@expo/vector-icons/Entypo";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+
 import {
   collection,
+  deleteDoc,
   doc,
   documentId,
   getDoc,
@@ -17,6 +22,7 @@ import {
   where,
 } from "firebase/firestore";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -52,12 +58,19 @@ export default function ProfileScreen() {
 
   const [myRecipes, setMyRecipes] = useState<RecipeListItem[]>([]);
   const [savedRecipes, setSavedRecipes] = useState<RecipeListItem[]>([]);
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [recipeToDelete, setRecipeToDelete] = useState<RecipeListItem | null>(
+    null
+  );
 
   const { theme, current, changeTheme } = useThemeManager();
   const user = auth.currentUser;
 
   const palette = useMemo(() => Colors[current], [current]);
 
+  // ----------------------------------------------------------------------------
+  // 1. Ensure user document exists
+  // ----------------------------------------------------------------------------
   async function ensureUserDoc(uid: string) {
     const r = doc(db, "users", uid);
     const s = await getDoc(r);
@@ -78,17 +91,18 @@ export default function ProfileScreen() {
           photoURL: user?.photoURL ?? null,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
+          likedRecipes: [],
         },
         { merge: true }
       );
     }
   }
 
+  // ----------------------------------------------------------------------------
+  // 2. Load profile data
+  // ----------------------------------------------------------------------------
   const loadProfileData = useCallback(async () => {
     if (!user) return;
-
-    // optional: uncomment if you want a spinner every time you refocus
-    // setLoading(true);
 
     await ensureUserDoc(user.uid);
 
@@ -118,9 +132,9 @@ export default function ProfileScreen() {
       likedIds = Array.isArray(data.likedRecipes) ? data.likedRecipes : [];
     }
 
+    // Load user's recipes
     const recipesRef = collection(db, "recipes");
 
-    // ---- recipes created by this user ----
     const myQuery = query(recipesRef, where("user_uid", "==", user.uid));
     const mySnap = await getDocs(myQuery);
 
@@ -140,7 +154,7 @@ export default function ProfileScreen() {
 
     setMyRecipes(myList);
 
-    // ---- liked/saved recipes ----
+    // Saved (liked) recipes
     if (likedIds.length > 0) {
       const likedQuery = query(
         recipesRef,
@@ -170,18 +184,19 @@ export default function ProfileScreen() {
     setLoading(false);
   }, [user, changeTheme]);
 
-  // initial load
   useEffect(() => {
     loadProfileData();
   }, [loadProfileData]);
 
-  // reload whenever screen becomes focused
   useFocusEffect(
     useCallback(() => {
       loadProfileData();
     }, [loadProfileData])
   );
 
+  // ----------------------------------------------------------------------------
+  // 3. Update avatar
+  // ----------------------------------------------------------------------------
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -209,6 +224,9 @@ export default function ProfileScreen() {
     }
   };
 
+  // ----------------------------------------------------------------------------
+  // 4. Save username with uniqueness check
+  // ----------------------------------------------------------------------------
   const saveUsername = async () => {
     if (!user) return;
     const raw = username.trim();
@@ -253,11 +271,32 @@ export default function ProfileScreen() {
     }
   };
 
+  // ----------------------------------------------------------------------------
+  // 5. Delete recipe
+  // ----------------------------------------------------------------------------
+  const handleDeleteRecipe = async () => {
+    if (!recipeToDelete) return;
+
+    try {
+      await deleteDoc(doc(db, "recipes", recipeToDelete.id));
+      setDeleteModal(false);
+      loadProfileData();
+    } catch (e: any) {
+      Alert.alert("Error", e.message ?? "Failed to delete recipe.");
+    }
+  };
+
+  // ----------------------------------------------------------------------------
+  // 6. Sign out
+  // ----------------------------------------------------------------------------
   const handleSignOut = async () => {
     await auth.signOut();
     router.replace("/");
   };
 
+  // ----------------------------------------------------------------------------
+  // 7. Loading state
+  // ----------------------------------------------------------------------------
   if (loading) {
     return (
       <ThemedView style={styles.loadingContainer}>
@@ -267,8 +306,12 @@ export default function ProfileScreen() {
     );
   }
 
+  // ----------------------------------------------------------------------------
+  // 8. Render profile screen
+  // ----------------------------------------------------------------------------
   return (
     <ThemedView style={[styles.container]}>
+      {/* HEADER CARD */}
       <View
         style={[
           styles.headerCard,
@@ -329,11 +372,14 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* ----- YOUR RECIPES ----- */}
+      {/* ------------------------------------------------ */}
+      {/* SECTION: MY RECIPES */}
+      {/* ------------------------------------------------ */}
       <View style={styles.section}>
         <ThemedText type="subtitle" style={styles.sectionTitle}>
           Your Recipes
         </ThemedText>
+
         <View
           style={[
             styles.card,
@@ -355,40 +401,69 @@ export default function ProfileScreen() {
               data={myRecipes}
               keyExtractor={(item) => item.id}
               renderItem={({ item }) => (
-                <Link
-                  href={{
-                    pathname: "/recipe/[id]",
-                    params: {
-                      id: item.id,
-                      title: item.title,
-                      imageUri: item.imageUri ?? "",
-                      description: item.description ?? "",
-                      ingredients: JSON.stringify(item.ingredients ?? []),
-                      instructions: item.instructions ?? "",
-                      isSaved: "false",
-                      totalTime: item.totalTime ?? "—",
-                      author: item.author ?? "Unknown",
-                    },
-                  }}
-                  asChild
-                >
-                  <TouchableOpacity>
+                <View style={styles.recipeRow}>
+                  {/* CLICK -> RECIPE PAGE */}
+                  <TouchableOpacity
+                    onPress={() =>
+                      router.push({
+                        pathname: "/recipe/[id]",
+                        params: {
+                          id: item.id,
+                          title: item.title,
+                          imageUri: item.imageUri ?? "",
+                          description: item.description ?? "",
+                          ingredients: JSON.stringify(item.ingredients ?? []),
+                          instructions: item.instructions ?? "",
+                          isSaved: "false",
+                          totalTime: item.totalTime ?? "—",
+                          author: item.author ?? "Unknown",
+                        },
+                      })
+                    }
+                  >
                     <ThemedText style={styles.recipeItem}>
                       • {item.title}
                     </ThemedText>
                   </TouchableOpacity>
-                </Link>
+
+                  <View style={styles.iconRow}>
+                    {/* EDIT */}
+                    <TouchableOpacity
+                      onPress={() =>
+                        router.push({
+                          pathname: "/edit-recipe/[id]",
+                          params: { id: item.id },
+                        })
+                      }
+                    >
+                      <Entypo name="pencil" size={22} color={palette.text} />
+                    </TouchableOpacity>
+
+                    {/* DELETE */}
+                    <TouchableOpacity
+                      onPress={() => {
+                        setRecipeToDelete(item);
+                        setDeleteModal(true);
+                      }}
+                    >
+                      <FontAwesome name="trash" size={22} color="#d33" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
               )}
             />
           )}
         </View>
       </View>
 
-      {/* ----- SAVED / LIKED RECIPES ----- */}
+      {/* ------------------------------------------------ */}
+      {/* SECTION: SAVED RECIPES */}
+      {/* ------------------------------------------------ */}
       <View style={styles.section}>
         <ThemedText type="subtitle" style={styles.sectionTitle}>
           Saved Recipes
         </ThemedText>
+
         <View
           style={[
             styles.card,
@@ -410,35 +485,35 @@ export default function ProfileScreen() {
               data={savedRecipes}
               keyExtractor={(item) => item.id}
               renderItem={({ item }) => (
-                <Link
-                  href={{
-                    pathname: "/recipe/[id]",
-                    params: {
-                      id: item.id,
-                      title: item.title,
-                      imageUri: item.imageUri ?? "",
-                      description: item.description ?? "",
-                      ingredients: JSON.stringify(item.ingredients ?? []),
-                      instructions: item.instructions ?? "",
-                      isSaved: "true",
-                      totalTime: item.totalTime ?? "—",
-                      author: item.author ?? "Unknown",
-                    },
-                  }}
-                  asChild
+                <TouchableOpacity
+                  onPress={() =>
+                    router.push({
+                      pathname: "/recipe/[id]",
+                      params: {
+                        id: item.id,
+                        title: item.title,
+                        imageUri: item.imageUri ?? "",
+                        description: item.description ?? "",
+                        ingredients: JSON.stringify(item.ingredients ?? []),
+                        instructions: item.instructions ?? "",
+                        isSaved: "true",
+                        totalTime: item.totalTime ?? "—",
+                        author: item.author ?? "Unknown",
+                      },
+                    })
+                  }
                 >
-                  <TouchableOpacity>
-                    <ThemedText style={styles.recipeItem}>
-                      • {item.title}
-                    </ThemedText>
-                  </TouchableOpacity>
-                </Link>
+                  <ThemedText style={styles.recipeItem}>
+                    • {item.title}
+                  </ThemedText>
+                </TouchableOpacity>
               )}
             />
           )}
         </View>
       </View>
 
+      {/* SIGN OUT */}
       <TouchableOpacity
         onPress={handleSignOut}
         style={[
@@ -449,7 +524,9 @@ export default function ProfileScreen() {
         <Text style={styles.signOutText}>Sign Out</Text>
       </TouchableOpacity>
 
-      {/* ----- THEME MODAL ----- */}
+      {/* ================================================================= */}
+      {/* THEME MODAL */}
+      {/* ================================================================= */}
       <Modal visible={themeModal} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View
@@ -508,10 +585,53 @@ export default function ProfileScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* ================================================================= */}
+      {/* DELETE CONFIRM MODAL */}
+      {/* ================================================================= */}
+      <Modal visible={deleteModal} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View
+            style={[
+              styles.modalContent,
+              { backgroundColor: palette.background },
+            ]}
+          >
+            <Text
+              style={{ color: palette.text, fontSize: 18, marginBottom: 12 }}
+            >
+              Delete this recipe?
+            </Text>
+
+            <Text style={{ color: palette.textSecondary, marginBottom: 20 }}>
+              This action cannot be undone.
+            </Text>
+
+            <View style={{ flexDirection: "row", gap: 12 }}>
+              <TouchableOpacity
+                style={styles.cancelBtn}
+                onPress={() => setDeleteModal(false)}
+              >
+                <Text style={{ color: palette.text }}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.deleteBtn}
+                onPress={handleDeleteRecipe}
+              >
+                <Text style={{ color: "white" }}>Delete</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ThemedView>
   );
 }
 
+// -----------------------------------------------------------------------------
+// STYLES
+// -----------------------------------------------------------------------------
 const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 20, paddingTop: 24 },
   loadingContainer: { flex: 1, alignItems: "center", justifyContent: "center" },
@@ -554,6 +674,19 @@ const styles = StyleSheet.create({
 
   recipeItem: { fontSize: 16, marginVertical: 6 },
 
+  recipeRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginVertical: 6,
+  },
+
+  iconRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+  },
+
   themeButton: { padding: 8, borderRadius: 10 },
 
   signOutBtn: {
@@ -573,6 +706,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "rgba(0,0,0,0.5)",
   },
+
   modalContent: {
     width: "82%",
     borderRadius: 18,
@@ -580,6 +714,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderWidth: 1,
   },
+
   option: {
     width: "100%",
     paddingVertical: 10,
@@ -588,5 +723,20 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderWidth: 1,
   },
+
   closeBtn: { marginTop: 6 },
+
+  cancelBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    backgroundColor: "rgba(255,255,255,0.12)",
+  },
+
+  deleteBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    backgroundColor: "#d33",
+  },
 });
