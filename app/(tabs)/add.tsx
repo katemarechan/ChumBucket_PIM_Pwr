@@ -11,14 +11,18 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  useColorScheme,
   View,
 } from "react-native";
-import { colors, commonStyles, searchStyles } from "../../styles/styles";
+
+import { Colors } from "@/constants/theme";
+import { useThemeManager } from "@/context/ThemeContext";
+
+import { commonStyles, searchStyles } from "../../styles/styles";
 
 export default function AddScreen() {
-  const isDark = useColorScheme() === "dark";
-  const theme = isDark ? colors.dark : colors.light;
+  const { current } = useThemeManager();
+  const theme = Colors[current];
+
   const router = useRouter();
   const { addRecipe } = useRecipes();
 
@@ -121,6 +125,7 @@ export default function AddScreen() {
           Add Recipe
         </Text>
 
+        {/* Title */}
         <View style={{ marginBottom: 14 }}>
           <Text style={{ color: theme.textSecondary, marginBottom: 6 }}>
             Title
@@ -138,6 +143,7 @@ export default function AddScreen() {
           />
         </View>
 
+        {/* Image */}
         <View style={{ marginBottom: 14 }}>
           <Text style={{ color: theme.textSecondary, marginBottom: 6 }}>
             Image (URL or pick from device)
@@ -154,7 +160,6 @@ export default function AddScreen() {
                 searchStyles.searchInput,
                 { backgroundColor: theme.inputBg, color: theme.text, flex: 1 },
               ]}
-              returnKeyType="done"
             />
             <TouchableOpacity
               onPress={pickFromDevice}
@@ -184,7 +189,7 @@ export default function AddScreen() {
           )}
         </View>
 
-        {/* Description (short) */}
+        {/* Description */}
         <View style={{ marginBottom: 14 }}>
           <Text style={{ color: theme.textSecondary, marginBottom: 6 }}>
             Description
@@ -198,7 +203,6 @@ export default function AddScreen() {
               searchStyles.searchInput,
               { backgroundColor: theme.inputBg, color: theme.text },
             ]}
-            returnKeyType="next"
           />
         </View>
 
@@ -215,14 +219,9 @@ export default function AddScreen() {
               placeholderTextColor={theme.textSecondary}
               style={[
                 searchStyles.searchInput,
-                {
-                  backgroundColor: theme.inputBg,
-                  color: theme.text,
-                  flex: 1,
-                },
+                { backgroundColor: theme.inputBg, color: theme.text, flex: 1 },
               ]}
               onSubmitEditing={addIngredient}
-              returnKeyType="done"
             />
             <TouchableOpacity
               onPress={addIngredient}
@@ -291,6 +290,7 @@ export default function AddScreen() {
           />
         </View>
 
+        {/* Submit */}
         <TouchableOpacity
           onPress={onSubmit}
           disabled={!canSubmit}
