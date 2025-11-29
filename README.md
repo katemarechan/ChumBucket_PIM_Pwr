@@ -61,7 +61,9 @@ Potential future enhancements include:
 - Multi-language support for international users
 - Social sharing integration with popular platforms
 
-Diagram C4:
+### C4 Diagram:
+
+![C4 Diagram](screenshots/chumbucketc4.jpg)
 
 
 
@@ -127,4 +129,6 @@ Potencjalne przyszłe ulepszenia obejmują:
 - Wsparcie wielojęzyczne dla użytkowników z całego świata
 - Integrację z popularnymi platformami społecznościowymi
 
-Diagram C4: 
+### Diagram C4:
+
+![C4 Diagram](screenshots/chumbucketc4.jpg)
