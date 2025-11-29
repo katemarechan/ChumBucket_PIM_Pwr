@@ -4,7 +4,7 @@ import { Colors } from "@/constants/theme";
 import { useThemeManager } from "@/context/ThemeContext";
 import { auth, db, storage } from "@/FirebaseConfig";
 import * as ImagePicker from "expo-image-picker";
-import { Link, router } from "expo-router";
+import { Link, router, useFocusEffect } from "expo-router";
 import {
   collection,
   doc,
@@ -17,7 +17,7 @@ import {
   where,
 } from "firebase/firestore";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -84,45 +84,71 @@ export default function ProfileScreen() {
     }
   }
 
-  useEffect(() => {
-    (async () => {
-      if (!user) return;
+  const loadProfileData = useCallback(async () => {
+    if (!user) return;
 
-      await ensureUserDoc(user.uid);
+    // optional: uncomment if you want a spinner every time you refocus
+    // setLoading(true);
 
-      const userRef = doc(db, "users", user.uid);
-      const userSnap = await getDoc(userRef);
+    await ensureUserDoc(user.uid);
 
-      let likedIds: string[] = [];
+    const userRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userRef);
 
-      if (userSnap.exists()) {
-        const data = userSnap.data() as any;
+    let likedIds: string[] = [];
 
-        setName(data.name || user.displayName || "User");
+    if (userSnap.exists()) {
+      const data = userSnap.data() as any;
 
-        const fallback =
-          user?.email && user.email.includes("@")
-            ? `@${user.email.split("@")[0]}`
-            : "@user";
+      setName(data.name || user.displayName || "User");
 
-        setUsername(data.username || fallback);
-        if (data.photoURL) setImage(data.photoURL);
+      const fallback =
+        user?.email && user.email.includes("@")
+          ? `@${user.email.split("@")[0]}`
+          : "@user";
 
-        const storedTheme = data.theme;
-        if (storedTheme === "light" || storedTheme === "dark") {
-          changeTheme(storedTheme);
-        }
+      setUsername(data.username || fallback);
+      if (data.photoURL) setImage(data.photoURL);
 
-        likedIds = Array.isArray(data.likedRecipes) ? data.likedRecipes : [];
+      const storedTheme = data.theme;
+      if (storedTheme === "light" || storedTheme === "dark") {
+        changeTheme(storedTheme);
       }
 
-      const recipesRef = collection(db, "recipes");
+      likedIds = Array.isArray(data.likedRecipes) ? data.likedRecipes : [];
+    }
 
-      // ---- recipes created by this user ----
-      const myQuery = query(recipesRef, where("user_uid", "==", user.uid));
-      const mySnap = await getDocs(myQuery);
+    const recipesRef = collection(db, "recipes");
 
-      const myList: RecipeListItem[] = mySnap.docs.map((d) => {
+    // ---- recipes created by this user ----
+    const myQuery = query(recipesRef, where("user_uid", "==", user.uid));
+    const mySnap = await getDocs(myQuery);
+
+    const myList: RecipeListItem[] = mySnap.docs.map((d) => {
+      const data = d.data() as any;
+      return {
+        id: d.id,
+        title: data.title,
+        imageUri: data.image ?? "",
+        description: data.description ?? "",
+        ingredients: Array.isArray(data.ingredients) ? data.ingredients : [],
+        instructions: data.instructions ?? "",
+        totalTime: (data.totalTime ?? "—").toString(),
+        author: data.author ?? "Unknown",
+      };
+    });
+
+    setMyRecipes(myList);
+
+    // ---- liked/saved recipes ----
+    if (likedIds.length > 0) {
+      const likedQuery = query(
+        recipesRef,
+        where(documentId(), "in", likedIds.slice(0, 10))
+      );
+      const likedSnap = await getDocs(likedQuery);
+
+      const likedList: RecipeListItem[] = likedSnap.docs.map((d) => {
         const data = d.data() as any;
         return {
           id: d.id,
@@ -136,40 +162,25 @@ export default function ProfileScreen() {
         };
       });
 
-      setMyRecipes(myList);
+      setSavedRecipes(likedList);
+    } else {
+      setSavedRecipes([]);
+    }
 
-      // ---- liked/saved recipes ----
-      if (likedIds.length > 0) {
-        const likedQuery = query(
-          recipesRef,
-          where(documentId(), "in", likedIds.slice(0, 10))
-        );
-        const likedSnap = await getDocs(likedQuery);
+    setLoading(false);
+  }, [user, changeTheme]);
 
-        const likedList: RecipeListItem[] = likedSnap.docs.map((d) => {
-          const data = d.data() as any;
-          return {
-            id: d.id,
-            title: data.title,
-            imageUri: data.image ?? "",
-            description: data.description ?? "",
-            ingredients: Array.isArray(data.ingredients)
-              ? data.ingredients
-              : [],
-            instructions: data.instructions ?? "",
-            totalTime: (data.totalTime ?? "—").toString(),
-            author: data.author ?? "Unknown",
-          };
-        });
+  // initial load
+  useEffect(() => {
+    loadProfileData();
+  }, [loadProfileData]);
 
-        setSavedRecipes(likedList);
-      } else {
-        setSavedRecipes([]);
-      }
-
-      setLoading(false);
-    })();
-  }, [user]);
+  // reload whenever screen becomes focused
+  useFocusEffect(
+    useCallback(() => {
+      loadProfileData();
+    }, [loadProfileData])
+  );
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
