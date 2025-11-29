@@ -77,7 +77,7 @@ Below you can also see the first stetches for the UI screens, both light and dar
 </p>
 
 <p align="center">
-  <img src="screenshots/homefeed.jpg" width="600" />
+  <img src="screenshots/home feed.jpg" width="600" />
 </p>
 <p align="center">
   <i>Home Feed page sketches</i>
@@ -184,7 +184,7 @@ Poniżej możesz zobaczyć również pierwsze szkice ekranów interfejsu użytko
 </p>
 
 <p align="center">
-<img src="screenshots/homefeed.jpg" width="600" />
+<img src="screenshots/home feed.jpg" width="600" />
 </p>
 <p align="center">
 <i>Szkice strony głównej</i>
