@@ -97,13 +97,16 @@ Below you can also see the first stetches for the UI screens, both light and dar
   <i>Desegnated Recipe page with all the details and methods</i>
 </p>
 
-## UI screens interactions and relations, initial sketch
+### UI screens interactions and relations, initial sketch
 
 <p align="center">
   <img src="screenshots/example UI interaction.png" width="600" />
 </p>
 
 
+---
+
+## Final version App screenshots and functionality
 
 
 [Polish Version]
@@ -204,7 +207,7 @@ Poniżej możesz zobaczyć również pierwsze szkice ekranów interfejsu użytko
 <i>Wydzielona strona przepisu ze wszystkimi szczegółami i metodami</i>
 </p>
 
-## Interakcje i relacje ekranów interfejsu użytkownika, szkic początkowy
+### Interakcje i relacje ekranów interfejsu użytkownika, szkic początkowy
 
 <p align="center">
 <img src="screenshots/example UI interaction.png" width="600" />
