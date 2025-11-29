@@ -1,4 +1,3 @@
-// app/recipe/[id].tsx
 import { useThemeManager } from "@/context/ThemeContext";
 import {
   colors,
@@ -8,13 +7,7 @@ import {
 } from "@/styles/styles";
 import { useLocalSearchParams } from "expo-router";
 import React, { useMemo, useState } from "react";
-import {
-  Image,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 type RouteParams = {
   id?: string;
@@ -111,10 +104,7 @@ const RecipeDetailScreen: React.FC = () => {
 
         <View style={recipeDetailStyles.recipeContent}>
           <Text
-            style={[
-              commonStyles.title,
-              { color: theme.text, marginBottom: 8 },
-            ]}
+            style={[commonStyles.title, { color: theme.text, marginBottom: 8 }]}
           >
             {title}
           </Text>
