@@ -110,7 +110,7 @@ export default function LoginScreen() {
           theme: "system",
         });
       }
-      router.replace("/(tabs)/home");
+      router.replace("/(tabs)/homefeed");
     } catch (err: any) {
       alert(err?.message ?? "Authentication error");
       console.error(err);

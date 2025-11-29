@@ -33,7 +33,9 @@ const HomeFeedScreen: React.FC = () => {
   const [query, setQuery] = useState("");
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return q ? recipes.filter((r) => r.title.toLowerCase().includes(q)) : recipes;
+    return q
+      ? recipes.filter((r) => r.title.toLowerCase().includes(q))
+      : recipes;
   }, [recipes, query]);
 
   return (
@@ -46,7 +48,11 @@ const HomeFeedScreen: React.FC = () => {
           onChangeText={setQuery}
           style={[
             searchStyles.searchInput,
-            { backgroundColor: theme.inputBg, color: theme.text },
+            {
+              backgroundColor: theme.inputBg,
+              color: theme.text,
+              marginTop: 30,
+            },
           ]}
           placeholder="🔍 Search recipes..."
           placeholderTextColor={theme.textSecondary}
@@ -66,8 +72,8 @@ const HomeFeedScreen: React.FC = () => {
         {filtered.map((recipe) => {
           const imgSrc = getImageSource(recipe.image);
           const imageUri = getImageUri(recipe.image);
-          
-          console.log("SUDDAAAA" + recipe.description)
+
+          console.log("SUDDAAAA" + recipe.description);
 
           return (
             <Link
@@ -98,9 +104,15 @@ const HomeFeedScreen: React.FC = () => {
                 ]}
                 activeOpacity={0.9}
               >
-                <Image source={imgSrc} style={recipeStyles.recipeImage} resizeMode="cover" />
+                <Image
+                  source={imgSrc}
+                  style={recipeStyles.recipeImage}
+                  resizeMode="cover"
+                />
                 <View style={recipeStyles.recipeInfo}>
-                  <Text style={[recipeStyles.recipeTitle, { color: theme.text }]}>
+                  <Text
+                    style={[recipeStyles.recipeTitle, { color: theme.text }]}
+                  >
                     {recipe.title}
                   </Text>
                   <TouchableOpacity

@@ -43,7 +43,10 @@ export default function AddScreen() {
   const pickFromDevice = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("Permission needed", "Allow photo library access to pick an image.");
+      Alert.alert(
+        "Permission needed",
+        "Allow photo library access to pick an image."
+      );
       return;
     }
 
@@ -70,8 +73,7 @@ export default function AddScreen() {
     if (!canSubmit) return;
 
     const id = Date.now().toString();
-    const normalizedImage =
-      imageUrl.trim().length > 0 ? imageUrl.trim() : ""; 
+    const normalizedImage = imageUrl.trim().length > 0 ? imageUrl.trim() : "";
 
     addRecipe({
       id,
@@ -100,7 +102,10 @@ export default function AddScreen() {
     >
       <ScrollView
         style={commonStyles.scrollContainer}
-        contentContainerStyle={[commonStyles.contentContainer, { paddingBottom: 120 }]}
+        contentContainerStyle={[
+          commonStyles.contentContainer,
+          { paddingBottom: 120 },
+        ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
@@ -108,15 +113,18 @@ export default function AddScreen() {
           style={{
             fontSize: 28,
             fontWeight: "700",
-            marginBottom: 16,
+            marginTop: 20,
+            marginBottom: 14,
             color: theme.text,
           }}
         >
-          ➕ Add Recipe
+          Add Recipe
         </Text>
 
         <View style={{ marginBottom: 14 }}>
-          <Text style={{ color: theme.textSecondary, marginBottom: 6 }}>Title</Text>
+          <Text style={{ color: theme.textSecondary, marginBottom: 6 }}>
+            Title
+          </Text>
           <TextInput
             value={title}
             onChangeText={setTitle}
@@ -164,7 +172,9 @@ export default function AddScreen() {
           </View>
 
           {!!imageUrl && (
-            <View style={{ marginTop: 10, borderRadius: 12, overflow: "hidden" }}>
+            <View
+              style={{ marginTop: 10, borderRadius: 12, overflow: "hidden" }}
+            >
               <Image
                 source={{ uri: imageUrl }}
                 style={{ width: "100%", height: 180 }}
@@ -176,7 +186,9 @@ export default function AddScreen() {
 
         {/* Description (short) */}
         <View style={{ marginBottom: 14 }}>
-          <Text style={{ color: theme.textSecondary, marginBottom: 6 }}>Description</Text>
+          <Text style={{ color: theme.textSecondary, marginBottom: 6 }}>
+            Description
+          </Text>
           <TextInput
             value={description}
             onChangeText={setDescription}
