@@ -1,4 +1,4 @@
-// app/recipe/[id].tsx
+import { useRecipes } from "@/context/RecipesContext";
 import { useThemeManager } from "@/context/ThemeContext";
 import {
   colors,
@@ -7,14 +7,8 @@ import {
   recipeStyles,
 } from "@/styles/styles";
 import { useLocalSearchParams } from "expo-router";
-import React, { useMemo, useState } from "react";
-import {
-  Image,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import React, { useMemo } from "react";
+import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 type RouteParams = {
   id?: string;
@@ -23,7 +17,6 @@ type RouteParams = {
   description?: string;
   ingredients?: string;
   instructions?: string;
-  isSaved?: string;
   totalTime?: string;
   author?: string;
 };
@@ -32,7 +25,11 @@ const RecipeDetailScreen: React.FC = () => {
   const { current } = useThemeManager();
   const theme = colors[current];
 
+  const { recipes, toggleSave } = useRecipes();
   const params = useLocalSearchParams<RouteParams>();
+
+  const recipeId = (params.id ?? "").toString();
+  const recipeFromContext = recipes.find((r) => r.id === recipeId);
 
   const parsedIngredients: string[] = useMemo(() => {
     try {
@@ -52,15 +49,24 @@ const RecipeDetailScreen: React.FC = () => {
       .filter(Boolean);
   }, [params.instructions]);
 
-  const initialIsSaved = (params.isSaved ?? "false") === "true";
+  const imageUri =
+    (params.imageUri as string | undefined) ||
+    (typeof recipeFromContext?.image === "string"
+      ? (recipeFromContext.image as string)
+      : "");
 
-  const [isSaved, setIsSaved] = useState<boolean>(initialIsSaved);
+  const title =
+    (params.title as string | undefined) ||
+    recipeFromContext?.title ||
+    "Recipe";
+  const description =
+    (params.description as string | undefined) ||
+    recipeFromContext?.description ||
+    "";
+  const totalTime = (params.totalTime as string | undefined) || "—";
+  const author = (params.author as string | undefined) || "Unknown";
 
-  const imageUri = params.imageUri ?? "";
-  const title = params.title ?? "Recipe";
-  const description = params.description ?? "";
-  const totalTime = params.totalTime ?? "—";
-  const author = params.author ?? "Unknown";
+  const isSaved = recipeFromContext?.isSaved ?? false;
 
   return (
     <View
@@ -100,7 +106,9 @@ const RecipeDetailScreen: React.FC = () => {
                 borderColor: theme.primary,
               },
             ]}
-            onPress={() => setIsSaved((s) => !s)}
+            onPress={() => {
+              if (recipeId) toggleSave(recipeId);
+            }}
             activeOpacity={0.9}
           >
             <Text style={recipeStyles.saveBtnText}>
@@ -111,10 +119,7 @@ const RecipeDetailScreen: React.FC = () => {
 
         <View style={recipeDetailStyles.recipeContent}>
           <Text
-            style={[
-              commonStyles.title,
-              { color: theme.text, marginBottom: 8 },
-            ]}
+            style={[commonStyles.title, { color: theme.text, marginBottom: 8 }]}
           >
             {title}
           </Text>
