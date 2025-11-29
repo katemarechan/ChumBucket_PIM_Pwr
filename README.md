@@ -63,7 +63,46 @@ Potential future enhancements include:
 
 ### C4 Diagram:
 
-![C4 Diagram](screenshots/chumbucketc4.jpg)
+<p align="center">
+  <img src="screenshots/chumbucketc4.jpg" width="600" />
+</p>
+
+Below you can also see the first stetches for the UI screens, both light and dark themes:
+
+<p align="center">
+  <img src="screenshots/main.jpg" width="600" />
+</p>
+<p align="center">
+  <i>Main Log In and regestry screens sketches</i>
+</p>
+
+<p align="center">
+  <img src="screenshots/homefeed.jpg" width="600" />
+</p>
+<p align="center">
+  <i>Home Feed page sketches</i>
+</p>
+
+<p align="center">
+  <img src="screenshots/profile.jpg" width="600" />
+</p>
+<p align="center">
+  <i>Profile page sketcges</i>
+</p>
+
+<p align="center">
+  <img src="screenshots/recipe page.jpg" width="600" />
+</p>
+<p align="center">
+  <i>Desegnated Recipe page with all the details and methods</i>
+</p>
+
+## UI screens interactions and relations, initial sketch
+
+<p align="center">
+  <img src="screenshots/example UI interaction.png" width="600" />
+</p>
+
 
 
 
@@ -131,4 +170,42 @@ Potencjalne przyszłe ulepszenia obejmują:
 
 ### Diagram C4:
 
-![C4 Diagram](screenshots/chumbucketc4.jpg)
+<p align="center">
+<img src="screenshots/chumbucketc4.jpg" width="600" />
+</p>
+
+Poniżej możesz zobaczyć również pierwsze szkice ekranów interfejsu użytkownika, zarówno w jasnym, jak i ciemnym motywie:
+
+<p align="center">
+<img src="screenshots/main.jpg" width="600" />
+</p>
+<p align="center">
+<i>Szkice głównych ekranów logowania i rejestru</i>
+</p>
+
+<p align="center">
+<img src="screenshots/homefeed.jpg" width="600" />
+</p>
+<p align="center">
+<i>Szkice strony głównej</i>
+</p>
+
+<p align="center">
+<img src="screenshots/profile.jpg" width="600" />
+</p>
+<p align="center">
+<i>Szkice strony profilu</i>
+</p>
+
+<p align="center">
+<img src="screenshots/recipe page.jpg" width="600" />
+</p>
+<p align="center">
+<i>Wydzielona strona przepisu ze wszystkimi szczegółami i metodami</i>
+</p>
+
+## Interakcje i relacje ekranów interfejsu użytkownika, szkic początkowy
+
+<p align="center">
+<img src="screenshots/example UI interaction.png" width="600" />
+</p>
