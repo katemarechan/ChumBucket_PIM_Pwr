@@ -4,10 +4,11 @@ import { Colors } from "@/constants/theme";
 import { useThemeManager } from "@/context/ThemeContext";
 import { auth, db, storage } from "@/FirebaseConfig";
 import * as ImagePicker from "expo-image-picker";
-import { router } from "expo-router";
+import { Link, router, useFocusEffect } from "expo-router";
 import {
   collection,
   doc,
+  documentId,
   getDoc,
   getDocs,
   query,
@@ -16,7 +17,7 @@ import {
   where,
 } from "firebase/firestore";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -30,6 +31,17 @@ import {
   View,
 } from "react-native";
 
+type RecipeListItem = {
+  id: string;
+  title: string;
+  imageUri?: string;
+  description?: string;
+  ingredients?: string[];
+  instructions?: string;
+  totalTime?: string;
+  author?: string;
+};
+
 export default function ProfileScreen() {
   const [image, setImage] = useState<string | null>(null);
   const [username, setUsername] = useState("");
@@ -37,6 +49,10 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [savingUsername, setSavingUsername] = useState(false);
   const [themeModal, setThemeModal] = useState(false);
+
+  const [myRecipes, setMyRecipes] = useState<RecipeListItem[]>([]);
+  const [savedRecipes, setSavedRecipes] = useState<RecipeListItem[]>([]);
+
   const { theme, current, changeTheme } = useThemeManager();
   const user = auth.currentUser;
 
@@ -68,32 +84,103 @@ export default function ProfileScreen() {
     }
   }
 
-  useEffect(() => {
-    (async () => {
-      if (!user) return;
-      await ensureUserDoc(user.uid);
+  const loadProfileData = useCallback(async () => {
+    if (!user) return;
 
-      const refDoc = doc(db, "users", user.uid);
-      const snap = await getDoc(refDoc);
+    // optional: uncomment if you want a spinner every time you refocus
+    // setLoading(true);
 
-      if (snap.exists()) {
-        const data = snap.data() as any;
-        setName(data.name || user.displayName || "User");
-        const fallback =
-          user?.email && user.email.includes("@")
-            ? `@${user.email.split("@")[0]}`
-            : "@user";
-        setUsername((data.username as string) || fallback);
-        if (data.photoURL) setImage(data.photoURL);
+    await ensureUserDoc(user.uid);
 
-        const storedTheme = data.theme as string | undefined;
-        if (storedTheme === "light" || storedTheme === "dark") {
-          changeTheme(storedTheme);
-        }
+    const userRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userRef);
+
+    let likedIds: string[] = [];
+
+    if (userSnap.exists()) {
+      const data = userSnap.data() as any;
+
+      setName(data.name || user.displayName || "User");
+
+      const fallback =
+        user?.email && user.email.includes("@")
+          ? `@${user.email.split("@")[0]}`
+          : "@user";
+
+      setUsername(data.username || fallback);
+      if (data.photoURL) setImage(data.photoURL);
+
+      const storedTheme = data.theme;
+      if (storedTheme === "light" || storedTheme === "dark") {
+        changeTheme(storedTheme);
       }
-      setLoading(false);
-    })();
-  }, [user]);
+
+      likedIds = Array.isArray(data.likedRecipes) ? data.likedRecipes : [];
+    }
+
+    const recipesRef = collection(db, "recipes");
+
+    // ---- recipes created by this user ----
+    const myQuery = query(recipesRef, where("user_uid", "==", user.uid));
+    const mySnap = await getDocs(myQuery);
+
+    const myList: RecipeListItem[] = mySnap.docs.map((d) => {
+      const data = d.data() as any;
+      return {
+        id: d.id,
+        title: data.title,
+        imageUri: data.image ?? "",
+        description: data.description ?? "",
+        ingredients: Array.isArray(data.ingredients) ? data.ingredients : [],
+        instructions: data.instructions ?? "",
+        totalTime: (data.totalTime ?? "—").toString(),
+        author: data.author ?? "Unknown",
+      };
+    });
+
+    setMyRecipes(myList);
+
+    // ---- liked/saved recipes ----
+    if (likedIds.length > 0) {
+      const likedQuery = query(
+        recipesRef,
+        where(documentId(), "in", likedIds.slice(0, 10))
+      );
+      const likedSnap = await getDocs(likedQuery);
+
+      const likedList: RecipeListItem[] = likedSnap.docs.map((d) => {
+        const data = d.data() as any;
+        return {
+          id: d.id,
+          title: data.title,
+          imageUri: data.image ?? "",
+          description: data.description ?? "",
+          ingredients: Array.isArray(data.ingredients) ? data.ingredients : [],
+          instructions: data.instructions ?? "",
+          totalTime: (data.totalTime ?? "—").toString(),
+          author: data.author ?? "Unknown",
+        };
+      });
+
+      setSavedRecipes(likedList);
+    } else {
+      setSavedRecipes([]);
+    }
+
+    setLoading(false);
+  }, [user, changeTheme]);
+
+  // initial load
+  useEffect(() => {
+    loadProfileData();
+  }, [loadProfileData]);
+
+  // reload whenever screen becomes focused
+  useFocusEffect(
+    useCallback(() => {
+      loadProfileData();
+    }, [loadProfileData])
+  );
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -117,7 +204,6 @@ export default function ProfileScreen() {
         );
         setImage(downloadURL);
       } catch (e: any) {
-        console.error(e);
         Alert.alert("Upload error", e?.message ?? "Failed to upload image");
       }
     }
@@ -133,6 +219,7 @@ export default function ProfileScreen() {
 
     try {
       setSavingUsername(true);
+
       const q = query(
         collection(db, "users"),
         where("username_lower", "==", lower)
@@ -157,9 +244,9 @@ export default function ProfileScreen() {
         },
         { merge: true }
       );
+
       setUsername(normalized);
     } catch (e: any) {
-      console.error(e);
       Alert.alert("Error", e?.message ?? "Failed to save username");
     } finally {
       setSavingUsername(false);
@@ -170,15 +257,6 @@ export default function ProfileScreen() {
     await auth.signOut();
     router.replace("/");
   };
-
-  const myRecipes = [
-    { id: "1", title: "Spaghetti Carbonara" },
-    { id: "2", title: "Pancakes" },
-  ];
-  const savedRecipes = [
-    { id: "3", title: "Greek Salad" },
-    { id: "4", title: "Tomato Soup" },
-  ];
 
   if (loading) {
     return (
@@ -227,10 +305,7 @@ export default function ProfileScreen() {
             placeholderTextColor={palette.icon}
             style={[
               styles.usernameInput,
-              {
-                color: palette.text,
-                borderColor: palette.icon,
-              },
+              { color: palette.text, borderColor: palette.icon },
             ]}
           />
           {savingUsername ? (
@@ -254,6 +329,7 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* ----- YOUR RECIPES ----- */}
       <View style={styles.section}>
         <ThemedText type="subtitle" style={styles.sectionTitle}>
           Your Recipes
@@ -270,16 +346,45 @@ export default function ProfileScreen() {
             },
           ]}
         >
-          <FlatList
-            data={myRecipes}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <ThemedText style={styles.recipeItem}>• {item.title}</ThemedText>
-            )}
-          />
+          {myRecipes.length === 0 ? (
+            <ThemedText style={styles.recipeItem}>
+              You haven't added any recipes yet.
+            </ThemedText>
+          ) : (
+            <FlatList
+              data={myRecipes}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <Link
+                  href={{
+                    pathname: "/recipe/[id]",
+                    params: {
+                      id: item.id,
+                      title: item.title,
+                      imageUri: item.imageUri ?? "",
+                      description: item.description ?? "",
+                      ingredients: JSON.stringify(item.ingredients ?? []),
+                      instructions: item.instructions ?? "",
+                      isSaved: "false",
+                      totalTime: item.totalTime ?? "—",
+                      author: item.author ?? "Unknown",
+                    },
+                  }}
+                  asChild
+                >
+                  <TouchableOpacity>
+                    <ThemedText style={styles.recipeItem}>
+                      • {item.title}
+                    </ThemedText>
+                  </TouchableOpacity>
+                </Link>
+              )}
+            />
+          )}
         </View>
       </View>
 
+      {/* ----- SAVED / LIKED RECIPES ----- */}
       <View style={styles.section}>
         <ThemedText type="subtitle" style={styles.sectionTitle}>
           Saved Recipes
@@ -296,13 +401,41 @@ export default function ProfileScreen() {
             },
           ]}
         >
-          <FlatList
-            data={savedRecipes}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <ThemedText style={styles.recipeItem}>• {item.title}</ThemedText>
-            )}
-          />
+          {savedRecipes.length === 0 ? (
+            <ThemedText style={styles.recipeItem}>
+              You have no saved recipes yet.
+            </ThemedText>
+          ) : (
+            <FlatList
+              data={savedRecipes}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <Link
+                  href={{
+                    pathname: "/recipe/[id]",
+                    params: {
+                      id: item.id,
+                      title: item.title,
+                      imageUri: item.imageUri ?? "",
+                      description: item.description ?? "",
+                      ingredients: JSON.stringify(item.ingredients ?? []),
+                      instructions: item.instructions ?? "",
+                      isSaved: "true",
+                      totalTime: item.totalTime ?? "—",
+                      author: item.author ?? "Unknown",
+                    },
+                  }}
+                  asChild
+                >
+                  <TouchableOpacity>
+                    <ThemedText style={styles.recipeItem}>
+                      • {item.title}
+                    </ThemedText>
+                  </TouchableOpacity>
+                </Link>
+              )}
+            />
+          )}
         </View>
       </View>
 
@@ -316,6 +449,7 @@ export default function ProfileScreen() {
         <Text style={styles.signOutText}>Sign Out</Text>
       </TouchableOpacity>
 
+      {/* ----- THEME MODAL ----- */}
       <Modal visible={themeModal} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View
@@ -342,7 +476,7 @@ export default function ProfileScreen() {
                   },
                 ]}
                 onPress={async () => {
-                  changeTheme(opt as "light" | "dark");
+                  changeTheme(opt);
                   if (user) {
                     await setDoc(
                       doc(db, "users", user.uid),
@@ -412,10 +546,12 @@ const styles = StyleSheet.create({
   sectionTitle: { marginBottom: 10 },
 
   card: {
-    borderRadius: 16,
+    borderRadius: 18,
     borderWidth: 1,
-    padding: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
   },
+
   recipeItem: { fontSize: 16, marginVertical: 6 },
 
   themeButton: { padding: 8, borderRadius: 10 },
@@ -428,6 +564,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     elevation: 2,
   },
+
   signOutText: { color: "#fff", fontSize: 16, fontWeight: "600" },
 
   modalOverlay: {

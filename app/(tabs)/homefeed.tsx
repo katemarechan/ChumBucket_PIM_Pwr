@@ -1,5 +1,3 @@
-// app/(tabs)/homefeed.tsx
-import { Colors } from "@/constants/theme";
 import { useRecipes } from "@/context/RecipesContext";
 import { useThemeManager } from "@/context/ThemeContext";
 import { Link } from "expo-router";
@@ -12,7 +10,12 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { commonStyles, recipeStyles, searchStyles } from "../../styles/styles";
+import {
+  colors,
+  commonStyles,
+  recipeStyles,
+  searchStyles,
+} from "../../styles/styles";
 
 const getImageSource = (img: number | string) =>
   typeof img === "string" ? { uri: img } : img;
@@ -22,7 +25,7 @@ const getImageUri = (img: number | string) =>
 
 const HomeFeedScreen: React.FC = () => {
   const { current } = useThemeManager();
-  const theme = Colors[current];
+  const theme = colors[current];
 
   const { recipes, toggleSave } = useRecipes();
 
