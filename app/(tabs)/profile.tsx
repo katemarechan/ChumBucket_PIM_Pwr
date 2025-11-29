@@ -68,9 +68,6 @@ export default function ProfileScreen() {
 
   const palette = useMemo(() => Colors[current], [current]);
 
-  // ----------------------------------------------------------------------------
-  // 1. Ensure user document exists
-  // ----------------------------------------------------------------------------
   async function ensureUserDoc(uid: string) {
     const r = doc(db, "users", uid);
     const s = await getDoc(r);
@@ -98,9 +95,6 @@ export default function ProfileScreen() {
     }
   }
 
-  // ----------------------------------------------------------------------------
-  // 2. Load profile data
-  // ----------------------------------------------------------------------------
   const loadProfileData = useCallback(async () => {
     if (!user) return;
 
@@ -132,7 +126,6 @@ export default function ProfileScreen() {
       likedIds = Array.isArray(data.likedRecipes) ? data.likedRecipes : [];
     }
 
-    // Load user's recipes
     const recipesRef = collection(db, "recipes");
 
     const myQuery = query(recipesRef, where("user_uid", "==", user.uid));
@@ -154,7 +147,6 @@ export default function ProfileScreen() {
 
     setMyRecipes(myList);
 
-    // Saved (liked) recipes
     if (likedIds.length > 0) {
       const likedQuery = query(
         recipesRef,
@@ -194,9 +186,6 @@ export default function ProfileScreen() {
     }, [loadProfileData])
   );
 
-  // ----------------------------------------------------------------------------
-  // 3. Update avatar
-  // ----------------------------------------------------------------------------
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -224,9 +213,6 @@ export default function ProfileScreen() {
     }
   };
 
-  // ----------------------------------------------------------------------------
-  // 4. Save username with uniqueness check
-  // ----------------------------------------------------------------------------
   const saveUsername = async () => {
     if (!user) return;
     const raw = username.trim();
@@ -271,9 +257,6 @@ export default function ProfileScreen() {
     }
   };
 
-  // ----------------------------------------------------------------------------
-  // 5. Delete recipe
-  // ----------------------------------------------------------------------------
   const handleDeleteRecipe = async () => {
     if (!recipeToDelete) return;
 
@@ -286,17 +269,11 @@ export default function ProfileScreen() {
     }
   };
 
-  // ----------------------------------------------------------------------------
-  // 6. Sign out
-  // ----------------------------------------------------------------------------
   const handleSignOut = async () => {
     await auth.signOut();
     router.replace("/");
   };
 
-  // ----------------------------------------------------------------------------
-  // 7. Loading state
-  // ----------------------------------------------------------------------------
   if (loading) {
     return (
       <ThemedView style={styles.loadingContainer}>
@@ -306,12 +283,8 @@ export default function ProfileScreen() {
     );
   }
 
-  // ----------------------------------------------------------------------------
-  // 8. Render profile screen
-  // ----------------------------------------------------------------------------
   return (
     <ThemedView style={[styles.container]}>
-      {/* HEADER CARD */}
       <View
         style={[
           styles.headerCard,
@@ -372,9 +345,6 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* ------------------------------------------------ */}
-      {/* SECTION: MY RECIPES */}
-      {/* ------------------------------------------------ */}
       <View style={styles.section}>
         <ThemedText type="subtitle" style={styles.sectionTitle}>
           Your Recipes
@@ -402,7 +372,6 @@ export default function ProfileScreen() {
               keyExtractor={(item) => item.id}
               renderItem={({ item }) => (
                 <View style={styles.recipeRow}>
-                  {/* CLICK -> RECIPE PAGE */}
                   <TouchableOpacity
                     onPress={() =>
                       router.push({
@@ -427,7 +396,6 @@ export default function ProfileScreen() {
                   </TouchableOpacity>
 
                   <View style={styles.iconRow}>
-                    {/* EDIT */}
                     <TouchableOpacity
                       onPress={() =>
                         router.push({
@@ -439,7 +407,6 @@ export default function ProfileScreen() {
                       <Entypo name="pencil" size={22} color={palette.text} />
                     </TouchableOpacity>
 
-                    {/* DELETE */}
                     <TouchableOpacity
                       onPress={() => {
                         setRecipeToDelete(item);
@@ -456,9 +423,6 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      {/* ------------------------------------------------ */}
-      {/* SECTION: SAVED RECIPES */}
-      {/* ------------------------------------------------ */}
       <View style={styles.section}>
         <ThemedText type="subtitle" style={styles.sectionTitle}>
           Saved Recipes
@@ -513,7 +477,6 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      {/* SIGN OUT */}
       <TouchableOpacity
         onPress={handleSignOut}
         style={[
@@ -524,9 +487,6 @@ export default function ProfileScreen() {
         <Text style={styles.signOutText}>Sign Out</Text>
       </TouchableOpacity>
 
-      {/* ================================================================= */}
-      {/* THEME MODAL */}
-      {/* ================================================================= */}
       <Modal visible={themeModal} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View
@@ -586,9 +546,6 @@ export default function ProfileScreen() {
         </View>
       </Modal>
 
-      {/* ================================================================= */}
-      {/* DELETE CONFIRM MODAL */}
-      {/* ================================================================= */}
       <Modal visible={deleteModal} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View
@@ -629,9 +586,6 @@ export default function ProfileScreen() {
   );
 }
 
-// -----------------------------------------------------------------------------
-// STYLES
-// -----------------------------------------------------------------------------
 const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 20, paddingTop: 24 },
   loadingContainer: { flex: 1, alignItems: "center", justifyContent: "center" },

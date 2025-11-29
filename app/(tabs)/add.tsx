@@ -121,7 +121,6 @@ export default function AddScreen() {
           Add Recipe
         </Text>
 
-        {/* Title */}
         <View style={{ marginBottom: 14 }}>
           <Text style={{ color: theme.textSecondary, marginBottom: 6 }}>
             Title
@@ -139,7 +138,6 @@ export default function AddScreen() {
           />
         </View>
 
-        {/* Image */}
         <View style={{ marginBottom: 14 }}>
           <Text style={{ color: theme.textSecondary, marginBottom: 6 }}>
             Image (URL or pick from device)
@@ -201,7 +199,6 @@ export default function AddScreen() {
           />
         </View>
 
-        {/* Ingredients */}
         <View style={{ marginBottom: 14 }}>
           <Text style={{ color: theme.textSecondary, marginBottom: 6 }}>
             Ingredients
@@ -233,7 +230,6 @@ export default function AddScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Pills */}
           <View
             style={{
               flexDirection: "row",
@@ -261,7 +257,6 @@ export default function AddScreen() {
           </View>
         </View>
 
-        {/* Instructions */}
         <View style={{ marginBottom: 18 }}>
           <Text style={{ color: theme.textSecondary, marginBottom: 6 }}>
             Instructions
@@ -285,7 +280,6 @@ export default function AddScreen() {
           />
         </View>
 
-        {/* Submit */}
         <TouchableOpacity
           onPress={onSubmit}
           disabled={!canSubmit}

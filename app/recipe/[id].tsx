@@ -1,7 +1,6 @@
-// app/recipe/[id].tsx
-import { db } from "@/FirebaseConfig";
 import { useRecipes } from "@/context/RecipesContext";
 import { useThemeManager } from "@/context/ThemeContext";
+import { auth, db } from "@/FirebaseConfig";
 import {
   colors,
   commonStyles,
@@ -9,9 +8,17 @@ import {
   recipeStyles,
 } from "@/styles/styles";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { doc, onSnapshot } from "firebase/firestore";
 import React, { useEffect, useMemo, useState } from "react";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import {
+  arrayRemove,
+  arrayUnion,
+  doc,
+  getDoc,
+  onSnapshot,
+  serverTimestamp,
+  updateDoc,
+} from "firebase/firestore";
 
 const fallbackAvatar = require("@/assets/images/defaultAvatar.jpg");
 
@@ -46,7 +53,9 @@ const RecipeDetailScreen: React.FC = () => {
   const [authorProfile, setAuthorProfile] = useState<UserProfile | null>(null);
   const [avatarError, setAvatarError] = useState(false);
 
-  // Load author info from users/{user_uid}
+  const user = auth.currentUser;
+  const [checkedIngredients, setCheckedIngredients] = useState<boolean[]>([]);
+
   useEffect(() => {
     if (!recipeFromContext?.user_uid) {
       setAuthorProfile(null);
@@ -82,9 +91,7 @@ const RecipeDetailScreen: React.FC = () => {
       try {
         const arr = JSON.parse(params.ingredients as string);
         return Array.isArray(arr) ? arr.map(String) : [];
-      } catch {
-        // ignore and fall back to context
-      }
+      } catch {}
     }
     return recipeFromContext?.ingredients ?? [];
   }, [params.ingredients, recipeFromContext?.ingredients]);
@@ -100,7 +107,6 @@ const RecipeDetailScreen: React.FC = () => {
       .filter(Boolean);
   }, [params.instructions, recipeFromContext?.instructions]);
 
-  // Prefer Firestore image URL over route param
   const imageFromContext =
     typeof recipeFromContext?.image === "string"
       ? recipeFromContext.image.trim()
@@ -136,13 +142,67 @@ const RecipeDetailScreen: React.FC = () => {
       ? { uri: authorProfile.photoURL }
       : fallbackAvatar;
 
+  useEffect(() => {
+    (async () => {
+      if (!user || !isSaved || parsedIngredients.length === 0) {
+        setCheckedIngredients(parsedIngredients.map(() => false));
+        return;
+      }
+
+      try {
+        const userRef = doc(db, "users", user.uid);
+        const snap = await getDoc(userRef);
+        const data = snap.exists() ? (snap.data() as any) : {};
+        const shoplist: string[] = Array.isArray(data.shoplist)
+          ? data.shoplist
+          : [];
+
+        const checks = parsedIngredients.map((ing) => shoplist.includes(ing));
+        setCheckedIngredients(checks);
+      } catch (e) {
+        console.error("Failed to load shoplist", e);
+        setCheckedIngredients(parsedIngredients.map(() => false));
+      }
+    })();
+  }, [user, isSaved, parsedIngredients]);
+
+  const toggleIngredientChecked = (index: number) => {
+    const ingredient = parsedIngredients[index];
+    if (!ingredient) return;
+
+    setCheckedIngredients((prev) => {
+      const copy = [...prev];
+      const newVal = !copy[index];
+      copy[index] = newVal;
+
+      if (user && isSaved) {
+        const userRef = doc(db, "users", user.uid);
+        (async () => {
+          try {
+            if (newVal) {
+              await updateDoc(userRef, {
+                shoplist: arrayUnion(ingredient),
+                updatedAt: serverTimestamp(),
+              });
+            } else {
+              await updateDoc(userRef, {
+                shoplist: arrayRemove(ingredient),
+                updatedAt: serverTimestamp(),
+              });
+            }
+          } catch (e) {
+            console.error("Failed to update shoplist", e);
+          }
+        })();
+      }
+
+      return copy;
+    });
+  };
+
   return (
     <>
-      <Stack.Screen
-        options={{
-          headerShown: false,
-        }}
-      />
+      <Stack.Screen options={{ headerShown: false }} />
 
       <View
         style={[commonStyles.container, { backgroundColor: theme.background }]}
@@ -151,7 +211,6 @@ const RecipeDetailScreen: React.FC = () => {
           style={commonStyles.scrollContainer}
           showsVerticalScrollIndicator={false}
         >
-          {/* Custom back button */}
           <View
             style={{
               paddingHorizontal: 16,
@@ -170,21 +229,18 @@ const RecipeDetailScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
 
-          {/* User header */}
           <View style={recipeDetailStyles.userHeader}>
             <Image
               source={avatarSrc}
               style={commonStyles.avatarMedium}
               onError={() => setAvatarError(true)}
             />
-
             <View>
               <Text
                 style={[recipeDetailStyles.userName, { color: theme.text }]}
               >
                 {authorName}
               </Text>
-
               {authorUsername && (
                 <Text
                   style={{
@@ -198,8 +254,6 @@ const RecipeDetailScreen: React.FC = () => {
               )}
             </View>
           </View>
-
-          {/* Hero image + like button */}
           <View style={recipeStyles.recipeHero}>
             {!!imageUri && (
               <Image
@@ -208,6 +262,7 @@ const RecipeDetailScreen: React.FC = () => {
                 resizeMode="cover"
               />
             )}
+
             <TouchableOpacity
               style={[
                 recipeStyles.saveBtn,
@@ -227,7 +282,6 @@ const RecipeDetailScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
 
-          {/* Content */}
           <View style={recipeDetailStyles.recipeContent}>
             <Text
               style={[
@@ -267,12 +321,13 @@ const RecipeDetailScreen: React.FC = () => {
             >
               Ingredients
             </Text>
+
             <View style={recipeDetailStyles.ingredientList}>
               {parsedIngredients.length === 0 ? (
                 <Text style={{ color: theme.textSecondary }}>
                   No ingredients provided.
                 </Text>
-              ) : (
+              ) : !isSaved ? (
                 parsedIngredients.map((line, idx) => (
                   <View
                     key={`${idx}-${line}`}
@@ -299,6 +354,78 @@ const RecipeDetailScreen: React.FC = () => {
                     </Text>
                   </View>
                 ))
+              ) : (
+                parsedIngredients.map((line, idx) => {
+                  const checked = checkedIngredients[idx] ?? false;
+
+                  return (
+                    <View
+                      key={`${idx}-${line}`}
+                      style={[
+                        recipeDetailStyles.ingredientItem,
+                        {
+                          borderBottomColor: theme.divider,
+                          paddingVertical: 12,
+                          flexDirection: "row",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={{
+                          color: theme.text,
+                          fontSize: 16,
+                          textDecorationLine: "none",
+                          opacity: 1,
+                          fontWeight: checked ? "700" : "400",
+                        }}
+                      >
+                        {line}
+                      </Text>
+
+                      <TouchableOpacity
+                        onPress={() => toggleIngredientChecked(idx)}
+                        activeOpacity={0.7}
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          gap: 8,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            color: theme.textSecondary,
+                            fontSize: 14,
+                          }}
+                        >
+                          Need to buy
+                        </Text>
+
+                        <View
+                          style={{
+                            width: 22,
+                            height: 22,
+                            borderRadius: 6,
+                            borderWidth: 2,
+                            borderColor: theme.primary,
+                            alignItems: "center",
+                            justifyContent: "center",
+                            backgroundColor: checked
+                              ? theme.primary
+                              : "transparent",
+                          }}
+                        >
+                          {checked && (
+                            <Text style={{ color: "#fff", fontSize: 14 }}>
+                              ✓
+                            </Text>
+                          )}
+                        </View>
+                      </TouchableOpacity>
+                    </View>
+                  );
+                })
               )}
             </View>
 

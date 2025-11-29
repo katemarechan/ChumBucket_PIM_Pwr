@@ -4,6 +4,7 @@ import { RecipesProvider } from "@/context/RecipesContext";
 import { useThemeManager } from "@/context/ThemeContext";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import Entypo from "@expo/vector-icons/Entypo";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { Tabs } from "expo-router";
 import React from "react";
 
@@ -47,6 +48,7 @@ export default function TabLayout() {
             ),
           }}
         />
+
         <Tabs.Screen
           name="homefeed"
           options={{
@@ -59,6 +61,20 @@ export default function TabLayout() {
             ),
           }}
         />
+
+        <Tabs.Screen
+          name="shoplist"
+          options={{
+            tabBarIcon: ({ focused }) => (
+              <Ionicons
+                size={24}
+                name={focused ? "cart" : "cart-outline"}
+                color={focused ? themeColors.tint : themeColors.icon}
+              />
+            ),
+          }}
+        />
+
         <Tabs.Screen
           name="profile"
           options={{

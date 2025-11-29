@@ -1,4 +1,3 @@
-// app/edit-recipe/[id].tsx
 import { db } from "@/FirebaseConfig";
 import { useThemeManager } from "@/context/ThemeContext";
 import { colors, commonStyles, searchStyles } from "@/styles/styles";
@@ -35,7 +34,6 @@ export default function EditRecipeScreen() {
   const [description, setDescription] = useState("");
   const [instructions, setInstructions] = useState("");
 
-  // 🔥 Загружаем рецепт из Firestore
   useEffect(() => {
     async function load() {
       if (!id) return;
@@ -160,7 +158,6 @@ export default function EditRecipeScreen() {
           Edit Recipe
         </Text>
 
-        {/* Title */}
         <View style={{ marginBottom: 14 }}>
           <Text style={{ color: theme.textSecondary, marginBottom: 6 }}>
             Title
@@ -177,7 +174,6 @@ export default function EditRecipeScreen() {
           />
         </View>
 
-        {/* Image */}
         <View style={{ marginBottom: 14 }}>
           <Text style={{ color: theme.textSecondary, marginBottom: 6 }}>
             Image URL or pick from device
@@ -223,7 +219,6 @@ export default function EditRecipeScreen() {
           )}
         </View>
 
-        {/* Description */}
         <View style={{ marginBottom: 14 }}>
           <Text style={{ color: theme.textSecondary, marginBottom: 6 }}>
             Description
@@ -240,7 +235,6 @@ export default function EditRecipeScreen() {
           />
         </View>
 
-        {/* Ingredients */}
         <View style={{ marginBottom: 14 }}>
           <Text style={{ color: theme.textSecondary, marginBottom: 6 }}>
             Ingredients
@@ -300,7 +294,6 @@ export default function EditRecipeScreen() {
           </View>
         </View>
 
-        {/* Instructions */}
         <View style={{ marginBottom: 18 }}>
           <Text style={{ color: theme.textSecondary, marginBottom: 6 }}>
             Instructions
@@ -323,7 +316,6 @@ export default function EditRecipeScreen() {
           />
         </View>
 
-        {/* Save */}
         <TouchableOpacity
           disabled={!canSubmit}
           onPress={onSave}
