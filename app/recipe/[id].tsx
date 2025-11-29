@@ -1,4 +1,11 @@
 // app/recipe/[id].tsx
+import { useThemeManager } from "@/context/ThemeContext";
+import {
+  colors,
+  commonStyles,
+  recipeDetailStyles,
+  recipeStyles,
+} from "@/styles/styles";
 import { useLocalSearchParams } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
@@ -6,29 +13,25 @@ import {
   ScrollView,
   Text,
   TouchableOpacity,
-  useColorScheme,
   View,
 } from "react-native";
-import {
-  colors,
-  commonStyles,
-  recipeDetailStyles,
-  recipeStyles,
-} from "../../styles/styles";
 
 type RouteParams = {
   id?: string;
   title?: string;
   imageUri?: string;
   description?: string;
-  ingredients?: string;    
-  instructions?: string;   
-  isSaved?: string;        
+  ingredients?: string;
+  instructions?: string;
+  isSaved?: string;
   totalTime?: string;
   author?: string;
 };
 
 const RecipeDetailScreen: React.FC = () => {
+  const { current } = useThemeManager();
+  const theme = colors[current];
+
   const params = useLocalSearchParams<RouteParams>();
 
   const parsedIngredients: string[] = useMemo(() => {
@@ -45,14 +48,11 @@ const RecipeDetailScreen: React.FC = () => {
     const raw = (params.instructions ?? "").toString();
     return raw
       .split(/\r?\n+/)
-      .map(s => s.trim())
+      .map((s) => s.trim())
       .filter(Boolean);
   }, [params.instructions]);
 
   const initialIsSaved = (params.isSaved ?? "false") === "true";
-
-  const isDark = useColorScheme() === "dark";
-  const theme = isDark ? colors.dark : colors.light;
 
   const [isSaved, setIsSaved] = useState<boolean>(initialIsSaved);
 
@@ -74,7 +74,7 @@ const RecipeDetailScreen: React.FC = () => {
           <View
             style={[
               commonStyles.avatarMedium,
-              { backgroundColor: theme.primaryDark },
+              { backgroundColor: theme.primary },
             ]}
           >
             <Text style={{ fontSize: 24 }}>👤</Text>
@@ -100,7 +100,7 @@ const RecipeDetailScreen: React.FC = () => {
                 borderColor: theme.primary,
               },
             ]}
-            onPress={() => setIsSaved(s => !s)}
+            onPress={() => setIsSaved((s) => !s)}
             activeOpacity={0.9}
           >
             <Text style={recipeStyles.saveBtnText}>
@@ -225,7 +225,6 @@ const RecipeDetailScreen: React.FC = () => {
               ))
             )}
           </View>
-
         </View>
       </ScrollView>
     </View>

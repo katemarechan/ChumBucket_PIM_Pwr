@@ -1,34 +1,37 @@
-import { StyleSheet } from 'react-native';
+import { Colors } from "@/constants/theme";
+import { StyleSheet } from "react-native";
+
+export const colors = Colors;
 
 // Color Palette
-export const colors = {
-  light: {
-    background: '#f5f5dc',
-    backgroundGradient: '#fff8dc',
-    primary: '#8fbc8f', // Granny Smith Apple green
-    primaryDark: '#6b9d6b',
-    text: '#2a2a2a',
-    textSecondary: '#666',
-    cardBg: 'rgba(255,255,255,0.4)',
-    cardBorder: 'rgba(255,255,255,0.3)',
-    inputBg: 'rgba(255,255,255,0.4)',
-    divider: 'rgba(0,0,0,0.05)',
-    navBg: 'rgba(255,255,255,0.95)',
-  },
-  dark: {
-    background: '#2a2a2a',
-    backgroundGradient: '#1a1a1a',
-    primary: '#8b4789', // Boysenberry/Jam purple
-    primaryDark: '#6b3567',
-    text: '#fff',
-    textSecondary: '#999',
-    cardBg: 'rgba(0,0,0,0.2)',
-    cardBorder: 'rgba(255,255,255,0.1)',
-    inputBg: 'rgba(255,255,255,0.1)',
-    divider: 'rgba(255,255,255,0.05)',
-    navBg: 'rgba(0,0,0,0.95)',
-  },
-};
+// export const colors = {
+//   light: {
+//     background: '#f5f5dc',
+//     backgroundGradient: '#fff8dc',
+//     primary: '#8fbc8f', // Granny Smith Apple green
+//     primaryDark: '#6b9d6b',
+//     text: '#2a2a2a',
+//     textSecondary: '#666',
+//     cardBg: 'rgba(255,255,255,0.4)',
+//     cardBorder: 'rgba(255,255,255,0.3)',
+//     inputBg: 'rgba(255,255,255,0.4)',
+//     divider: 'rgba(0,0,0,0.05)',
+//     navBg: 'rgba(255,255,255,0.95)',
+//   },
+//   dark: {
+//     background: '#2a2a2a',
+//     backgroundGradient: '#1a1a1a',
+//     primary: '#8b4789', // Boysenberry/Jam purple
+//     primaryDark: '#6b3567',
+//     text: '#fff',
+//     textSecondary: '#999',
+//     cardBg: 'rgba(0,0,0,0.2)',
+//     cardBorder: 'rgba(255,255,255,0.1)',
+//     inputBg: 'rgba(255,255,255,0.1)',
+//     divider: 'rgba(255,255,255,0.05)',
+//     navBg: 'rgba(0,0,0,0.95)',
+//   },
+// };
 
 // Common Styles
 export const commonStyles = StyleSheet.create({
@@ -37,8 +40,8 @@ export const commonStyles = StyleSheet.create({
     flex: 1,
   },
   centerContent: {
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   scrollContainer: {
     flex: 1,
@@ -50,7 +53,7 @@ export const commonStyles = StyleSheet.create({
   // Card Styles
   card: {
     borderRadius: 20,
-    overflow: 'hidden',
+    overflow: "hidden",
     borderWidth: 1,
   },
   cardContent: {
@@ -58,18 +61,18 @@ export const commonStyles = StyleSheet.create({
   },
   glassCard: {
     borderRadius: 20,
-    overflow: 'hidden',
+    overflow: "hidden",
     borderWidth: 1,
   },
 
   // Text Styles
   title: {
     fontSize: 28,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   subtitle: {
     fontSize: 20,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   body: {
     fontSize: 16,
@@ -87,18 +90,18 @@ export const commonStyles = StyleSheet.create({
     paddingVertical: 15,
     paddingHorizontal: 20,
     borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   buttonText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   iconButton: {
     padding: 8,
     borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   // Input Styles
@@ -110,16 +113,16 @@ export const commonStyles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
     marginBottom: 8,
   },
 
   // Avatar Styles
   avatar: {
     borderRadius: 25,
-    overflow: 'hidden',
-    justifyContent: 'center',
-    alignItems: 'center',
+    overflow: "hidden",
+    justifyContent: "center",
+    alignItems: "center",
   },
   avatarSmall: {
     width: 40,
@@ -136,18 +139,18 @@ export const commonStyles = StyleSheet.create({
 
   // Layout Helpers
   row: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   rowBetween: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   flexCenter: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   // Spacing
@@ -179,7 +182,7 @@ export const commonStyles = StyleSheet.create({
 
   // Shadow
   shadow: {
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -189,13 +192,13 @@ export const commonStyles = StyleSheet.create({
     elevation: 5,
   },
   shadowLight: {
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 1,
     },
     shadowOpacity: 0.18,
-    shadowRadius: 1.00,
+    shadowRadius: 1.0,
     elevation: 1,
   },
 });
@@ -203,13 +206,13 @@ export const commonStyles = StyleSheet.create({
 // Bottom Navigation Styles
 export const navigationStyles = StyleSheet.create({
   bottomNav: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 30,
     paddingVertical: 12,
     borderTopWidth: 1,
@@ -234,22 +237,22 @@ export const recipeStyles = StyleSheet.create({
   recipeCard: {
     borderRadius: 20,
     marginBottom: 15,
-    overflow: 'hidden',
+    overflow: "hidden",
     borderWidth: 1,
   },
   recipeImage: {
-    width: '100%',
+    width: "100%",
     height: 320,
   },
   recipeInfo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 15,
   },
   recipeTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     flex: 1,
   },
   saveIcon: {
@@ -257,34 +260,34 @@ export const recipeStyles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     borderWidth: 2,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginLeft: 10,
   },
   saveIconText: {
     fontSize: 18,
   },
   recipeHero: {
-    width: '100%',
+    width: "100%",
     height: 350,
-    position: 'relative',
+    position: "relative",
   },
   recipeHeroImg: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   saveBtn: {
-    position: 'absolute',
+    position: "absolute",
     top: 20,
     right: 20,
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: 'rgba(255,255,255,0.3)',
+    backgroundColor: "rgba(255,255,255,0.3)",
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderColor: "rgba(255,255,255,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   saveBtnText: {
     fontSize: 24,
@@ -294,22 +297,22 @@ export const recipeStyles = StyleSheet.create({
 // Recipe Detail Styles
 export const recipeDetailStyles = StyleSheet.create({
   userHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 20,
     gap: 12,
   },
   userName: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   recipeContent: {
     padding: 20,
     paddingBottom: 100,
   },
   timeInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
     marginBottom: 25,
   },
@@ -317,32 +320,32 @@ export const recipeDetailStyles = StyleSheet.create({
     fontSize: 16,
   },
   timeInfoBold: {
-    fontWeight: '700',
+    fontWeight: "700",
   },
   sectionTitle: {
     fontSize: 22,
-    fontWeight: '600',
+    fontWeight: "600",
     marginTop: 25,
     marginBottom: 15,
   },
   originalRecipe: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 10,
   },
   ingredientList: {
     marginTop: 0,
   },
   ingredientItem: {
-    flexDirection: 'row',
+    flexDirection: "row",
     paddingVertical: 12,
     paddingLeft: 25,
     borderBottomWidth: 1,
   },
   ingredientBullet: {
-    position: 'absolute',
+    position: "absolute",
     left: 8,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   ingredientText: {
     fontSize: 16,
@@ -358,11 +361,11 @@ export const recipeDetailStyles = StyleSheet.create({
     lineHeight: 24,
   },
   stepNumber: {
-    fontWeight: '700',
+    fontWeight: "700",
   },
   hashtags: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 10,
     marginTop: 25,
   },
@@ -379,8 +382,8 @@ export const recipeDetailStyles = StyleSheet.create({
 // Profile Styles
 export const profileStyles = StyleSheet.create({
   profileHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 20,
     paddingTop: 30,
     gap: 15,
@@ -391,7 +394,7 @@ export const profileStyles = StyleSheet.create({
   },
   profileName: {
     fontSize: 24,
-    fontWeight: '700',
+    fontWeight: "700",
     marginBottom: 5,
   },
   profileUsername: {
@@ -407,14 +410,14 @@ export const profileStyles = StyleSheet.create({
     marginBottom: 30,
   },
   sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 15,
   },
   sectionTitle: {
     fontSize: 20,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   dropdownBtn: {
     padding: 5,
@@ -423,7 +426,7 @@ export const profileStyles = StyleSheet.create({
   },
   recipeList: {
     borderRadius: 15,
-    overflow: 'hidden',
+    overflow: "hidden",
     maxHeight: 195,
     borderWidth: 1,
   },
@@ -431,8 +434,8 @@ export const profileStyles = StyleSheet.create({
     maxHeight: 600,
   },
   recipeItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 15,
     borderBottomWidth: 1,
   },
@@ -456,20 +459,20 @@ export const profileStyles = StyleSheet.create({
 export const authStyles = StyleSheet.create({
   welcomeScreen: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 40,
   },
   logoContainer: {
     marginBottom: 60,
-    alignItems: 'center',
+    alignItems: "center",
   },
   logo: {
     width: 120,
     height: 120,
     borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 20,
   },
   logoText: {
@@ -477,30 +480,30 @@ export const authStyles = StyleSheet.create({
   },
   appName: {
     fontSize: 42,
-    fontWeight: '700',
+    fontWeight: "700",
     marginBottom: 10,
   },
   appTagline: {
     fontSize: 16,
   },
   buttonGroup: {
-    width: '100%',
+    width: "100%",
     maxWidth: 280,
     gap: 15,
   },
   welcomeBtn: {
     paddingVertical: 18,
     borderRadius: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   authModal: {
-    width: '90%',
+    width: "90%",
     maxWidth: 320,
     borderRadius: 30,
     padding: 40,
@@ -508,22 +511,22 @@ export const authStyles = StyleSheet.create({
     borderWidth: 2,
   },
   closeBtn: {
-    position: 'absolute',
+    position: "absolute",
     top: 15,
     right: 15,
     width: 35,
     height: 35,
     borderRadius: 17.5,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   closeBtnText: {
     fontSize: 20,
   },
   modalTitle: {
     fontSize: 32,
-    fontWeight: '700',
-    textAlign: 'center',
+    fontWeight: "700",
+    textAlign: "center",
     marginBottom: 30,
   },
   inputGroup: {
@@ -532,21 +535,21 @@ export const authStyles = StyleSheet.create({
   submitBtn: {
     paddingVertical: 16,
     borderRadius: 15,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 10,
   },
   submitBtnText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
+    fontWeight: "600",
+    color: "#fff",
   },
   switchText: {
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 20,
     fontSize: 14,
   },
   switchLink: {
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });
 
@@ -557,7 +560,7 @@ export const searchStyles = StyleSheet.create({
     paddingTop: 20,
   },
   searchInput: {
-    width: '100%',
+    width: "100%",
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 25,
@@ -573,5 +576,5 @@ export default {
   recipeDetailStyles,
   profileStyles,
   authStyles,
-  searchStyles
+  searchStyles,
 };

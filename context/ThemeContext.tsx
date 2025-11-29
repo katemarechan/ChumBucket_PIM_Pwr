@@ -2,38 +2,36 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Appearance } from "react-native";
 
-export type AppTheme = "light" | "dark" | "system";
+export type AppTheme = "light" | "dark";
 
 type ThemeContextType = {
   theme: AppTheme;
-  current: "light" | "dark";
+  current: AppTheme;
   changeTheme: (newTheme: AppTheme) => void;
 };
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
-  const [theme, setTheme] = useState<AppTheme>("system");
-  const [current, setCurrent] = useState<"light" | "dark">(
-    Appearance.getColorScheme() ?? "light"
-  );
+  const [theme, setTheme] = useState<AppTheme>(() => {
+    const system = Appearance.getColorScheme();
+    return system === "dark" ? "dark" : "light";
+  });
 
   useEffect(() => {
     AsyncStorage.getItem("app_theme").then((saved) => {
-      if (saved) setTheme(saved as AppTheme);
+      if (saved === "light" || saved === "dark") {
+        setTheme(saved);
+      }
     });
   }, []);
-
-  useEffect(() => {
-    const calc =
-      theme === "system" ? Appearance.getColorScheme() ?? "light" : theme;
-    setCurrent(calc);
-  }, [theme]);
 
   const changeTheme = (newTheme: AppTheme) => {
     setTheme(newTheme);
     AsyncStorage.setItem("app_theme", newTheme);
   };
+
+  const current = theme;
 
   return (
     <ThemeContext.Provider value={{ theme, current, changeTheme }}>
