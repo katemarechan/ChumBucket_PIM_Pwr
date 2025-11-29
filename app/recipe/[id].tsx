@@ -97,11 +97,14 @@ const RecipeDetailScreen: React.FC = () => {
       .filter(Boolean);
   }, [params.instructions, recipeFromContext?.instructions]);
 
-  const imageUri =
-    (params.imageUri as string | undefined) ||
-    (typeof recipeFromContext?.image === "string"
-      ? recipeFromContext.image
-      : "");
+  const imageFromContext =
+    typeof recipeFromContext?.image === "string"
+      ? recipeFromContext.image.trim()
+      : "";
+  const imageFromParams =
+    (params.imageUri as string | undefined)?.toString().trim() || "";
+
+  const imageUri = imageFromContext || imageFromParams;
 
   const title =
     (params.title as string | undefined) ||
