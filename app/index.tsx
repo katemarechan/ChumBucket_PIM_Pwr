@@ -80,7 +80,7 @@ export default function LoginScreen() {
         name: defaults?.name ?? null,
         username: defaults?.username ?? fallbackUsername,
         username_lower: (defaults?.username ?? fallbackUsername).toLowerCase(),
-        // default to light theme instead of "system"
+        likedRecipes: [],
         theme: defaults?.theme ?? "light",
         photoURL: defaults?.photoURL ?? null,
         createdAt: new Date().toISOString(),
