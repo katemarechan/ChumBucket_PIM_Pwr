@@ -238,7 +238,7 @@ export const recipeStyles = StyleSheet.create({
     borderRadius: 20,
     marginBottom: 20,
     overflow: "hidden",
-    borderWidth: 4,
+    borderWidth: 1,
   },
   recipeImage: {
     width: "100%",
@@ -578,3 +578,4 @@ export default {
   authStyles,
   searchStyles,
 };
+
